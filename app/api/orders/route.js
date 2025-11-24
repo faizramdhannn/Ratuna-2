@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { appendSheetData, updateStock, getSheetData } from '../../../lib/googleSheets.js';
-import { v4 as uuidv4 } from 'uuid';
 
 export async function GET() {
   try {
@@ -18,7 +17,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { item_name, quantity_item, total_amount, cashier_name } = body;
+    const { order_id, item_name, quantity_item, total_amount, cashier_name } = body;
 
     if (!item_name || !quantity_item || !total_amount || !cashier_name) {
       return NextResponse.json(
@@ -27,7 +26,8 @@ export async function POST(request) {
       );
     }
 
-    const order_id = `ORD-${uuidv4().slice(0, 8).toUpperCase()}`;
+    // Use provided order_id or generate new one
+    const finalOrderId = order_id || `RTN-${Date.now().toString(36).toUpperCase()}`;
     const created_at = new Date().toISOString();
 
     try {
@@ -40,7 +40,7 @@ export async function POST(request) {
     }
 
     const orderData = [
-      order_id,
+      finalOrderId,
       created_at,
       item_name,
       quantity_item,
@@ -54,7 +54,7 @@ export async function POST(request) {
       success: true,
       message: 'Order berhasil dibuat dan stock telah dikurangi',
       data: {
-        order_id,
+        order_id: finalOrderId,
         created_at,
         item_name,
         quantity_item,

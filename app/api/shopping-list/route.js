@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { appendSheetData, getSheetData } from '../../../lib/googleSheets.js';
 import { getCurrentUser } from '../../../lib/auth.js';
-import { v4 as uuidv4 } from 'uuid';
 
 export async function GET() {
   try {
@@ -28,23 +27,25 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { item_shopping, quantity, price } = body;
+    const { shopping_id, item_shopping, quantity, unit, price } = body;
 
-    if (!item_shopping || !quantity || !price) {
+    if (!item_shopping || !quantity || !unit || !price) {
       return NextResponse.json(
         { error: 'Semua field harus diisi' },
         { status: 400 }
       );
     }
 
-    const shopping_id = `SHOP-${uuidv4().slice(0, 8).toUpperCase()}`;
+    // Use provided shopping_id or generate new one
+    const finalShoppingId = shopping_id || `RTN-SHOP-${Date.now().toString(36).toUpperCase()}`;
     const shopping_date = new Date().toISOString();
 
     const shoppingData = [
-      shopping_id,
+      finalShoppingId,
       shopping_date,
       item_shopping,
       quantity,
+      unit,
       price
     ];
 
@@ -54,10 +55,11 @@ export async function POST(request) {
       success: true,
       message: 'Shopping list berhasil ditambahkan',
       data: {
-        shopping_id,
+        shopping_id: finalShoppingId,
         shopping_date,
         item_shopping,
         quantity,
+        unit,
         price
       }
     });

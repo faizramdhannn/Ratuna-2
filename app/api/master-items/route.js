@@ -27,23 +27,25 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { item_name, hpp, operasional, worker, marketing, hpj, net_sales } = body;
+    const { item_name, category, hpp, operasional, worker, marketing, hpj, net_sales, status } = body;
 
-    if (!item_name || !hpp || !hpj) {
+    if (!item_name || !category || !hpp || !hpj) {
       return NextResponse.json(
-        { error: 'item_name, hpp, dan hpj harus diisi' },
+        { error: 'item_name, category, hpp, dan hpj harus diisi' },
         { status: 400 }
       );
     }
 
     const itemData = [
       item_name,
+      category || '',
       hpp || 0,
       operasional || 0,
       worker || 0,
       marketing || 0,
       hpj || 0,
-      net_sales || 0
+      net_sales || 0,
+      status || 'draft' // default to draft
     ];
 
     await appendSheetData('Master Item', itemData);
@@ -59,7 +61,7 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       message: 'Master item berhasil ditambahkan',
-      data: { item_name, hpp, operasional, worker, marketing, hpj, net_sales }
+      data: { item_name, category, hpp, operasional, worker, marketing, hpj, net_sales, status }
     });
 
   } catch (error) {
@@ -83,9 +85,11 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { item_name, hpp, operasional, worker, marketing, hpj, net_sales, rowIndex } = body;
+    const { item_name, category, hpp, operasional, worker, marketing, hpj, net_sales, status, rowIndex, _rowIndex } = body;
 
-    if (!rowIndex) {
+    const finalRowIndex = rowIndex || _rowIndex;
+
+    if (!finalRowIndex) {
       return NextResponse.json(
         { error: 'rowIndex harus disertakan' },
         { status: 400 }
@@ -94,20 +98,22 @@ export async function PUT(request) {
 
     const itemData = [
       item_name,
+      category || '',
       hpp || 0,
       operasional || 0,
       worker || 0,
       marketing || 0,
       hpj || 0,
-      net_sales || 0
+      net_sales || 0,
+      status || 'draft'
     ];
 
-    await updateSheetData('Master Item', rowIndex, itemData);
+    await updateSheetData('Master Item', finalRowIndex, itemData);
 
     return NextResponse.json({
       success: true,
       message: 'Master item berhasil diupdate',
-      data: { item_name, hpp, operasional, worker, marketing, hpj, net_sales }
+      data: { item_name, category, hpp, operasional, worker, marketing, hpj, net_sales, status }
     });
 
   } catch (error) {

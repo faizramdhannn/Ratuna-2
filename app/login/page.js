@@ -100,14 +100,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-
-          <div className="mt-6 pt-6 border-t-2 border-gray-200">
-            <div className="text-xs text-gray-500 space-y-1">
-              <p className="font-bold">Demo Account:</p>
-              <p>Username: <span className="font-mono bg-gray-100 px-2 py-1 rounded">Ratuna</span></p>
-              <p>Password: <span className="font-mono bg-gray-100 px-2 py-1 rounded">ratuna123</span></p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Package, ClipboardList, Boxes, Users } from 'lucide-react';
+import { ShoppingCart, Package, ClipboardList, Boxes, Users, Tag } from 'lucide-react';
 import OrderTab from '@/components/OrderTab';
 import MasterItemTab from '@/components/MasterItemTab';
 import ShoppingListTab from '@/components/ShoppingListTab';
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('order');
   const [currentUser, setCurrentUser] = useState(null);
   const [masterItems, setMasterItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -19,6 +20,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchCurrentUser();
     fetchMasterItems();
+    fetchCategories();
     fetchStocks();
   }, []);
 
@@ -47,6 +49,16 @@ export default function Dashboard() {
       if (data.success) setMasterItems(data.data);
     } catch (error) {
       console.error('Error fetching master items:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      if (data.success) setCategories(data.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -170,6 +182,7 @@ export default function Dashboard() {
           <OrderTab
             masterItems={masterItems}
             stocks={stocks}
+            categories={categories}
             currentUser={currentUser}
             onMessage={showMessage}
           />
@@ -178,6 +191,7 @@ export default function Dashboard() {
         {activeTab === 'master' && (
           <MasterItemTab
             masterItems={masterItems}
+            categories={categories}
             onRefresh={fetchMasterItems}
             onMessage={showMessage}
           />
