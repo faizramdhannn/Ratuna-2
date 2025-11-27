@@ -17,9 +17,18 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { order_id, item_name, quantity_item, total_amount, cashier_name } = body;
+    const { 
+      order_id, 
+      item_name, 
+      quantity_item, 
+      total_amount, 
+      cashier_name,
+      payment_method,
+      cash_paid,
+      change
+    } = body;
 
-    if (!item_name || !quantity_item || !total_amount || !cashier_name) {
+    if (!item_name || !quantity_item || !total_amount || !cashier_name || !payment_method) {
       return NextResponse.json(
         { error: 'Semua field harus diisi' },
         { status: 400 }
@@ -45,7 +54,10 @@ export async function POST(request) {
       item_name,
       quantity_item,
       total_amount,
-      cashier_name
+      cashier_name,
+      payment_method,
+      cash_paid || total_amount,
+      change || 0
     ];
 
     await appendSheetData('Order', orderData);
@@ -59,7 +71,10 @@ export async function POST(request) {
         item_name,
         quantity_item,
         total_amount,
-        cashier_name
+        cashier_name,
+        payment_method,
+        cash_paid: cash_paid || total_amount,
+        change: change || 0
       }
     });
 
