@@ -36,7 +36,7 @@ const BillOrder = forwardRef(({ orderData, items }, ref) => {
         <h1 className="font-bold text-lg mb-1">Ratuna</h1>
         <p className="text-xs leading-relaxed">
           Jl babakan cichaeum no.73 RT 02 RW 21<br />
-          Comenyan, Kb.Bandung<br />
+          Cimenyan, Kb.Bandung<br />
           No. Telp 088218639833
         </p>
       </div>

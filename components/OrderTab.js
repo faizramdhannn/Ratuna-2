@@ -4,7 +4,6 @@ import { useState, useMemo, useRef } from 'react';
 import { Search, ShoppingCart, Printer, X } from 'lucide-react';
 import OrderCard from './OrderCard';
 import BillOrder from './BillOrder';
-// Note: Install react-to-print: npm install react-to-print
 
 export default function OrderTab({ masterItems, stocks, categories, currentUser, onMessage }) {
   const [cart, setCart] = useState([]);
