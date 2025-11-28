@@ -22,3 +22,40 @@
     grid-column: span 5 / span 5;
   }
 }
+
+/* Print styles */
+@media print {
+  /* Hide everything except bill when printing */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the bill modal content */
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  /* Hide modal buttons during print */
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Optimize for thermal printer (80mm) */
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+}

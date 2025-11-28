@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, ShoppingCart } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { Search, ShoppingCart, Printer, X } from 'lucide-react';
 import OrderCard from './OrderCard';
+import BillOrder from './BillOrder';
+// Note: Install react-to-print: npm install react-to-print
 
 export default function OrderTab({ masterItems, stocks, categories, currentUser, onMessage }) {
   const [cart, setCart] = useState([]);
@@ -15,6 +17,11 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [cashAmount, setCashAmount] = useState('');
+
+  // Bill modal states
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [billData, setBillData] = useState(null);
+  const billRef = useRef();
 
   // Filter active items only
   const activeItems = masterItems.filter(item => item.status === 'active');
@@ -115,6 +122,9 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
     
     // Generate single order ID for entire transaction
     const orderId = `RTN-${Date.now().toString(36).toUpperCase()}`;
+    const totalAmount = calculateTotal();
+    const cashPaid = paymentMethod === 'Cash' ? parseInt(cashAmount) : totalAmount;
+    const change = paymentMethod === 'Cash' ? cashPaid - totalAmount : 0;
     
     try {
       for (const cartItem of cart) {
@@ -125,8 +135,8 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
           total_amount: cartItem.item.hpj * cartItem.quantity,
           cashier_name: cashierName,
           payment_method: paymentMethod,
-          cash_paid: paymentMethod === 'Cash' ? parseInt(cashAmount) : calculateTotal(),
-          change: paymentMethod === 'Cash' ? parseInt(cashAmount) - calculateTotal() : 0
+          cash_paid: cashPaid,
+          change: change
         };
 
         const res = await fetch('/api/orders', {
@@ -141,11 +151,37 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
         }
       }
 
+      // Prepare bill data
+      const billInfo = {
+        order_id: orderId,
+        created_at: new Date().toISOString(),
+        cashier_name: cashierName,
+        total_amount: totalAmount,
+        payment_method: paymentMethod,
+        cash_paid: cashPaid,
+        change: change
+      };
+
+      const billItems = cart.map(c => ({
+        item_name: c.item.item_name,
+        quantity: c.quantity,
+        price: c.item.hpj,
+        subtotal: c.item.hpj * c.quantity
+      }));
+
+      setBillData({ orderData: billInfo, items: billItems });
+
       onMessage('success', `Checkout berhasil! Order ID: ${orderId}`);
+      
+      // Clear cart and close payment modal
       setCart([]);
       setShowPaymentModal(false);
       setPaymentMethod(null);
       setCashAmount('');
+      
+      // Show bill modal
+      setShowBillModal(true);
+      
       if (window.refreshStocks) window.refreshStocks();
     } catch (error) {
       onMessage('error', error.message);
@@ -157,6 +193,18 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
     setShowPaymentModal(false);
     setPaymentMethod(null);
     setCashAmount('');
+  };
+
+  const closeBillModal = () => {
+    setShowBillModal(false);
+    setBillData(null);
+  };
+
+  const handlePrint = () => {
+    window.print();
+    setTimeout(() => {
+      onMessage('success', 'Bill berhasil dicetak!');
+    }, 1000);
   };
 
   return (
@@ -417,6 +465,49 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
                 className="flex-1 px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Processing...' : 'Bayar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bill Modal */}
+      {showBillModal && billData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4 no-print">
+              <h3 className="text-2xl font-bold">Bill Order</h3>
+              <button
+                onClick={closeBillModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Bill Preview */}
+            <div className="border-2 border-gray-200 rounded-lg mb-6 print-area">
+              <BillOrder 
+                ref={billRef}
+                orderData={billData.orderData}
+                items={billData.items}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3 no-print">
+              <button
+                onClick={closeBillModal}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-all"
+              >
+                Tutup
+              </button>
+              <button
+                onClick={handlePrint}
+                className="flex-1 px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-all flex items-center justify-center space-x-2"
+              >
+                <Printer className="w-5 h-5" />
+                <span>Print Bill</span>
               </button>
             </div>
           </div>

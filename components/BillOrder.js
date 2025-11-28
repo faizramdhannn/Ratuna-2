@@ -3,8 +3,6 @@
 import { forwardRef } from 'react';
 
 const BillOrder = forwardRef(({ orderData, items }, ref) => {
-  // orderData: { order_id, created_at, cashier_name, total_amount, payment_method, cash_paid, change }
-  // items: [{ item_name, quantity, price, subtotal }]
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -35,7 +33,7 @@ const BillOrder = forwardRef(({ orderData, items }, ref) => {
 
       {/* Store Info */}
       <div className="text-center mb-4 border-b-2 border-dashed border-gray-400 pb-4">
-        <h1 className="font-bold text-lg mb-1">Ratuna Shop</h1>
+        <h1 className="font-bold text-lg mb-1">Ratuna</h1>
         <p className="text-xs leading-relaxed">
           Jl babakan cichaeum no.73 RT 02 RW 21<br />
           Comenyan, Kb.Bandung<br />
