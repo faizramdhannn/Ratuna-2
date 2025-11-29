@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, EyeOff, Edit2, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Edit2, Trash2, X, Save } from 'lucide-react';
 
 export default function MasterItemTab({ masterItems, categories, onRefresh, onMessage }) {
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  
   const [form, setForm] = useState({
     item_name: '',
     category: '',
@@ -14,7 +17,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
     marketing: '',
     hpj: '',
     net_sales: '',
-    status: 'draft' // draft or active
+    status: 'draft'
   });
 
   const handleSubmit = async () => {
@@ -47,6 +50,68 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
         onRefresh();
       } else {
         onMessage('error', data.error || 'Gagal menambahkan master item');
+      }
+    } catch (error) {
+      onMessage('error', 'Terjadi kesalahan');
+    }
+    setLoading(false);
+  };
+
+  const openEditModal = (item) => {
+    setEditingItem(item);
+    setForm({
+      item_name: item.item_name,
+      category: item.category,
+      hpp: item.hpp || '',
+      operasional: item.operasional || '',
+      worker: item.worker || '',
+      marketing: item.marketing || '',
+      hpj: item.hpj || '',
+      net_sales: item.net_sales || '',
+      status: item.status || 'draft'
+    });
+    setIsEditing(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditing(false);
+    setEditingItem(null);
+    setForm({ 
+      item_name: '', 
+      category: '',
+      hpp: '', 
+      operasional: '', 
+      worker: '', 
+      marketing: '', 
+      hpj: '', 
+      net_sales: '',
+      status: 'draft'
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!form.item_name || !form.category || !form.hpp || !form.hpj) {
+      onMessage('error', 'Item name, category, HPP, dan HPJ harus diisi');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/master-items', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          rowIndex: editingItem._rowIndex
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        onMessage('success', 'Master item berhasil diupdate!');
+        closeEditModal();
+        onRefresh();
+      } else {
+        onMessage('error', data.error || 'Gagal mengupdate master item');
       }
     } catch (error) {
       onMessage('error', 'Terjadi kesalahan');
@@ -112,6 +177,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, item_name: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="Nama item"
+                disabled={isEditing}
               />
             </div>
             <div>
@@ -120,6 +186,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 value={form.category}
                 onChange={(e) => setForm({...form, category: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                disabled={isEditing}
               >
                 <option value="">-- Pilih Category --</option>
                 {categories.map((cat, idx) => (
@@ -140,6 +207,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, hpp: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
+                disabled={isEditing}
               />
             </div>
             <div>
@@ -150,6 +218,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, operasional: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
+                disabled={isEditing}
               />
             </div>
             <div>
@@ -160,6 +229,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, worker: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
+                disabled={isEditing}
               />
             </div>
             <div>
@@ -170,6 +240,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, marketing: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
+                disabled={isEditing}
               />
             </div>
           </div>
@@ -183,6 +254,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, hpj: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
+                disabled={isEditing}
               />
             </div>
             <div>
@@ -193,6 +265,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 onChange={(e) => setForm({...form, net_sales: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
+                disabled={isEditing}
               />
             </div>
             <div>
@@ -201,6 +274,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                 value={form.status}
                 onChange={(e) => setForm({...form, status: e.target.value})}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                disabled={isEditing}
               >
                 <option value="draft">Draft</option>
                 <option value="active">Active</option>
@@ -210,7 +284,7 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
 
           <button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || isEditing}
             className="w-full bg-black text-white py-4 rounded-lg font-medium hover:bg-gray-800 transition-all disabled:opacity-50"
           >
             {loading ? 'Processing...' : 'Tambah Master Item'}
@@ -273,6 +347,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
                         )}
                       </button>
                       <button
+                        onClick={() => openEditModal(item)}
+                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => deleteItem(item)}
                         className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                         title="Delete"
@@ -287,6 +368,147 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
           </table>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold">Edit Master Item</h3>
+              <button
+                onClick={closeEditModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Item Name *</label>
+                  <input
+                    type="text"
+                    value={form.item_name}
+                    onChange={(e) => setForm({...form, item_name: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="Nama item"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Category *</label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm({...form, category: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                  >
+                    <option value="">-- Pilih Category --</option>
+                    {categories.map((cat, idx) => (
+                      <option key={idx} value={cat.category_name}>
+                        {cat.category_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">HPP *</label>
+                  <input
+                    type="number"
+                    value={form.hpp}
+                    onChange={(e) => setForm({...form, hpp: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Operasional</label>
+                  <input
+                    type="number"
+                    value={form.operasional}
+                    onChange={(e) => setForm({...form, operasional: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Worker</label>
+                  <input
+                    type="number"
+                    value={form.worker}
+                    onChange={(e) => setForm({...form, worker: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Marketing</label>
+                  <input
+                    type="number"
+                    value={form.marketing}
+                    onChange={(e) => setForm({...form, marketing: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">HPJ *</label>
+                  <input
+                    type="number"
+                    value={form.hpj}
+                    onChange={(e) => setForm({...form, hpj: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Net Sales</label>
+                  <input
+                    type="number"
+                    value={form.net_sales}
+                    onChange={(e) => setForm({...form, net_sales: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Status</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm({...form, status: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={closeEditModal}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleUpdate}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  <Save className="w-5 h-5" />
+                  <span>{loading ? 'Processing...' : 'Simpan Perubahan'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
