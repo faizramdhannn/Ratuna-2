@@ -28,6 +28,7 @@ const BillOrder = forwardRef(({ orderData, items }, ref) => {
           src="/Logo_Ratuna.png" 
           alt="Ratuna Logo" 
           className="logo-img"
+          style={{ display: 'block', margin: '0 auto' }}
         />
       </div>
 

@@ -202,9 +202,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
             <div>
               <label className="block text-sm font-medium mb-2">HPP *</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={form.hpp}
-                onChange={(e) => setForm({...form, hpp: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setForm({...form, hpp: value});
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
                 disabled={isEditing}
@@ -213,9 +217,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
             <div>
               <label className="block text-sm font-medium mb-2">Operasional</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={form.operasional}
-                onChange={(e) => setForm({...form, operasional: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setForm({...form, operasional: value});
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
                 disabled={isEditing}
@@ -224,9 +232,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
             <div>
               <label className="block text-sm font-medium mb-2">Worker</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={form.worker}
-                onChange={(e) => setForm({...form, worker: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setForm({...form, worker: value});
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
                 disabled={isEditing}
@@ -235,9 +247,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
             <div>
               <label className="block text-sm font-medium mb-2">Marketing</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={form.marketing}
-                onChange={(e) => setForm({...form, marketing: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setForm({...form, marketing: value});
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
                 disabled={isEditing}
@@ -249,9 +265,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
             <div>
               <label className="block text-sm font-medium mb-2">HPJ *</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={form.hpj}
-                onChange={(e) => setForm({...form, hpj: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setForm({...form, hpj: value});
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
                 disabled={isEditing}
@@ -260,9 +280,13 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
             <div>
               <label className="block text-sm font-medium mb-2">Net Sales</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={form.net_sales}
-                onChange={(e) => setForm({...form, net_sales: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setForm({...form, net_sales: value});
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                 placeholder="0"
                 disabled={isEditing}

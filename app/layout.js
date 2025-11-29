@@ -1,9 +1,9 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Ratuna System',
+  title: 'Ratuna',
   icons: "/Logo_Ratuna.png",
-  description: 'Sistem Manajemen Kasir Profesional',
+  description: 'Dashboard Ratuna',
 }
 
 export default function RootLayout({ children }) {

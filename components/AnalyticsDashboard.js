@@ -227,8 +227,8 @@ export default function AnalyticsDashboard({ onMessage }) {
   return (
     <div className="space-y-4">
       {/* Filter Section */}
-      <div className="bg-white border-2 border-black rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Analytics Dashboard</h2>
+      <div className="bg-white border-2 border-grey-200 rounded-lg p-6">
+        <h2 className="text-2xl text-center font-bold mb-4">Analytics Dashboard</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -275,8 +275,8 @@ export default function AnalyticsDashboard({ onMessage }) {
       </div>
 
       {/* BARIS 1: Diagram Bar Chart Breakdown Biaya */}
-      <div className="bg-white border-2 border-black rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-white border-2 border-grey-200 rounded-lg p-6">
+        <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Pembagian Biaya Operasional</h3>
           <div className="text-right">
             <p className="text-xs text-gray-600">Total Biaya</p>
@@ -288,49 +288,52 @@ export default function AnalyticsDashboard({ onMessage }) {
             Belum ada data biaya
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart 
-              data={costBreakdownData} 
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis 
-                type="number" 
-                tickFormatter={(value) => `Rp ${(value / 1000).toFixed(0)}k`}
-                style={{ fontSize: '12px' }}
-              />
-              <YAxis 
-                type="category" 
-                dataKey="name" 
-                width={90}
-                style={{ fontSize: '13px', fontWeight: '600' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                {costBreakdownData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-        
-        {/* Percentage Labels */}
-        {costBreakdownData.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4 pt-4 border-t">
-            {costBreakdownData.map((item, idx) => {
-              const percentage = totalCostSum > 0 ? ((item.value / totalCostSum) * 100).toFixed(1) : 0;
-              return (
-                <div key={idx} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: item.color }}></div>
-                  <div className="text-xs">
-                    <p className="font-semibold text-gray-700">{item.name}</p>
-                    <p className="text-gray-500">{percentage}%</p>
+          <div className="w-full">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart 
+                data={costBreakdownData} 
+                layout="vertical"
+                margin={{ top: 10, right: 60, left: 100, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                <XAxis 
+                  type="number" 
+                  tickFormatter={(value) => `Rp ${(value / 1000).toFixed(0)}k`}
+                  style={{ fontSize: '11px', fill: '#6b7280' }}
+                  tick={{ dy: 5 }}
+                />
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  width={90}
+                  style={{ fontSize: '13px', fontWeight: '600', fill: '#374151' }}
+                  tick={{ dx: -5 }}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+                <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={32}>
+                  {costBreakdownData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            
+            {/* Percentage Labels */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6 pt-4 border-t-2 border-gray-200">
+              {costBreakdownData.map((item, idx) => {
+                const percentage = totalCostSum > 0 ? ((item.value / totalCostSum) * 100).toFixed(1) : 0;
+                return (
+                  <div key={idx} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="w-4 h-4 rounded flex-shrink-0 mt-0.5" style={{ backgroundColor: item.color }}></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
+                      <p className="text-gray-600 text-xs">{percentage}% dari total</p>
+                      <p className="text-gray-500 text-xs font-medium">Rp {item.value.toLocaleString()}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -365,80 +368,6 @@ export default function AnalyticsDashboard({ onMessage }) {
           value={`${analytics.totalOrders} transaksi`}
           subtitle={`${formatDateShort(startDate)} - ${formatDateShort(endDate)}`}
         />
-      </div>
-
-      {/* BARIS 3: HPP, Operasional, Worker, Marketing, Net Sales */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="p-1.5 bg-red-200 rounded-lg">
-              <Package className="w-4 h-4 text-red-700" />
-            </div>
-            <h4 className="font-bold text-sm text-red-900">HPP</h4>
-          </div>
-          <p className="text-xl font-bold text-red-900">
-            Rp {analytics.totalHPP.toLocaleString()}
-          </p>
-          <p className="text-xs text-red-700 mt-1">Harga Pokok Penjualan</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="p-1.5 bg-orange-200 rounded-lg">
-              <svg className="w-4 h-4 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h4 className="font-bold text-sm text-orange-900">Operasional</h4>
-          </div>
-          <p className="text-xl font-bold text-orange-900">
-            Rp {analytics.totalOperasional.toLocaleString()}
-          </p>
-          <p className="text-xs text-orange-700 mt-1">Biaya Operasional</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="p-1.5 bg-blue-200 rounded-lg">
-              <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <h4 className="font-bold text-sm text-blue-900">Worker</h4>
-          </div>
-          <p className="text-xl font-bold text-blue-900">
-            Rp {analytics.totalWorker.toLocaleString()}
-          </p>
-          <p className="text-xs text-blue-700 mt-1">Biaya Tenaga Kerja</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="p-1.5 bg-yellow-200 rounded-lg">
-              <svg className="w-4 h-4 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-              </svg>
-            </div>
-            <h4 className="font-bold text-sm text-yellow-900">Marketing</h4>
-          </div>
-          <p className="text-xl font-bold text-yellow-900">
-            Rp {analytics.totalMarketing.toLocaleString()}
-          </p>
-          <p className="text-xs text-yellow-700 mt-1">Biaya Marketing</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="p-1.5 bg-emerald-200 rounded-lg">
-              <DollarSign className="w-4 h-4 text-emerald-700" />
-            </div>
-            <h4 className="font-bold text-sm text-emerald-900">Net Sales</h4>
-          </div>
-          <p className="text-xl font-bold text-emerald-900">
-            Rp {analytics.totalNetSales.toLocaleString()}
-          </p>
-          <p className="text-xs text-emerald-700 mt-1">Penjualan Bersih</p>
-        </div>
       </div>
 
       {/* BARIS 4: QRIS dan Cash */}
@@ -485,7 +414,7 @@ export default function AnalyticsDashboard({ onMessage }) {
       </div>
 
       {/* Summary Section */}
-      <div className="bg-white border-2 border-black rounded-lg p-6">
+      <div className="bg-white border-2 border-grey-200 rounded-lg p-6">
         <h3 className="text-xl font-bold mb-4">Ringkasan Keuangan</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
@@ -519,7 +448,7 @@ export default function AnalyticsDashboard({ onMessage }) {
       </div>
 
       {/* Top Items Section */}
-      <div className="bg-white border-2 border-black rounded-lg p-6">
+      <div className="bg-white border-2 border-grey-200 rounded-lg p-6">
         <div className="flex items-center space-x-3 mb-6">
           <Package className="w-6 h-6" />
           <h3 className="text-xl font-bold">Top 5 Item Terlaris</h3>
