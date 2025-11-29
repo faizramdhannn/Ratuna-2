@@ -326,15 +326,6 @@ export default function ShoppingListTab({ onMessage }) {
               className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
             />
           </div>
-
-          <div className="flex items-end">
-            <button
-              onClick={filterHistory}
-              className="w-full px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-all"
-            >
-              Terapkan Filter
-            </button>
-          </div>
         </div>
 
         {/* Summary Cards */}
