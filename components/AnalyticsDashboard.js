@@ -279,7 +279,7 @@ export default function AnalyticsDashboard({ onMessage }) {
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Pembagian Biaya Operasional</h3>
           <div className="text-right">
-            <p className="text-xs text-gray-600">Total Biaya</p>
+            <p className="text-xs text-gray-600">Total Penghasilan</p>
             <p className="text-xl font-bold">Rp {totalCostSum.toLocaleString()}</p>
           </div>
         </div>
