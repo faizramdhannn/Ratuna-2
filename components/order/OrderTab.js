@@ -162,13 +162,25 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
 
   const handlePrint = () => {
     const printContent = document.getElementById('bill-print-area');
-    const printWindow = window.open('', '_blank');
+    if (!printContent) {
+      onMessage('error', 'Konten bill tidak ditemukan');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    
+    if (!printWindow) {
+      onMessage('error', 'Gagal membuka window print. Pastikan popup tidak diblokir.');
+      return;
+    }
     
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Print Bill</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Print Bill - ${billData?.orderData?.order_id || 'Order'}</title>
         <style>
           @page { 
             size: 58mm auto; 
@@ -188,6 +200,7 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
             line-height: 1.3;
             width: 58mm;
             padding: 3mm;
+            background: white;
           }
           .bill-logo {
             text-align: center;
@@ -196,6 +209,7 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
           .logo-img {
             height: 35px;
             max-width: 50mm;
+            object-fit: contain;
           }
           .bill-header {
             text-align: center;
@@ -256,6 +270,12 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
             font-weight: bold;
             margin-top: 3mm;
           }
+          @media print {
+            body {
+              width: 58mm;
+              padding: 0;
+            }
+          }
         </style>
       </head>
       <body>
@@ -265,13 +285,32 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
     `);
     
     printWindow.document.close();
-    printWindow.focus();
     
+    // Wait untuk gambar dan konten dimuat
+    printWindow.onload = function() {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        
+        // Tunggu setelah print dialog selesai
+        setTimeout(() => {
+          printWindow.close();
+        }, 100);
+        
+        onMessage('success', 'Bill berhasil dicetak!');
+      }, 500);
+    };
+    
+    // Fallback jika onload tidak terpicu
     setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-      onMessage('success', 'Bill berhasil dicetak!');
-    }, 250);
+      if (printWindow && !printWindow.closed) {
+        printWindow.focus();
+        printWindow.print();
+        setTimeout(() => {
+          printWindow.close();
+        }, 100);
+      }
+    }, 1000);
   };
 
   return (
