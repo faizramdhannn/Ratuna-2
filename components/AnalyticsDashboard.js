@@ -124,6 +124,15 @@ export default function AnalyticsDashboard({ onMessage }) {
     });
   };
 
+  const formatDateShort = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   const StatCard = ({ icon: Icon, label, value, color, subtitle }) => (
     <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-black transition-all">
       <div className="flex items-start justify-between">
@@ -218,7 +227,7 @@ export default function AnalyticsDashboard({ onMessage }) {
           icon={Calendar}
           label="Periode"
           value={`${analytics.totalOrders} transaksi`}
-          subtitle={`${startDate} s/d ${endDate}`}
+          subtitle={`${formatDateShort(startDate)} - ${formatDateShort(endDate)}`}
         />
       </div>
 

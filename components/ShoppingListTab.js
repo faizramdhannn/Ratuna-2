@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Calendar, Package } from 'lucide-react';
+import { Plus, Trash2, Calendar, Package, Filter } from 'lucide-react';
 
 export default function ShoppingListTab({ onMessage }) {
   const [loading, setLoading] = useState(false);
@@ -12,10 +12,33 @@ export default function ShoppingListTab({ onMessage }) {
     price: ''
   }]);
   const [history, setHistory] = useState([]);
+  
+  // Filter states
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filteredHistory, setFilteredHistory] = useState([]);
+  const [totalBelanja, setTotalBelanja] = useState(0);
+
+  useEffect(() => {
+    // Set default dates (last 7 days)
+    const today = new Date();
+    const lastWeek = new Date(today);
+    lastWeek.setDate(today.getDate() - 7);
+    
+    setEndDate(today.toISOString().split('T')[0]);
+    setStartDate(lastWeek.toISOString().split('T')[0]);
+  }, []);
 
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  useEffect(() => {
+    // Filter history whenever dates or history changes
+    if (startDate && endDate) {
+      filterHistory();
+    }
+  }, [startDate, endDate, history]);
 
   const fetchHistory = async () => {
     try {
@@ -33,7 +56,6 @@ export default function ShoppingListTab({ onMessage }) {
               total: 0
             };
           }
-          // Price is already total, not price per unit
           const itemTotal = parseFloat(item.price);
           grouped[item.shopping_id].items.push({
             ...item,
@@ -52,6 +74,25 @@ export default function ShoppingListTab({ onMessage }) {
     } catch (error) {
       console.error('Error fetching history:', error);
     }
+  };
+
+  const filterHistory = () => {
+    if (!startDate || !endDate) return;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const filtered = history.filter(shop => {
+      const shopDate = new Date(shop.shopping_date);
+      return shopDate >= start && shopDate <= end;
+    });
+
+    setFilteredHistory(filtered);
+    
+    // Calculate total
+    const total = filtered.reduce((sum, shop) => sum + shop.total, 0);
+    setTotalBelanja(total);
   };
 
   const addItem = () => {
@@ -94,17 +135,15 @@ export default function ShoppingListTab({ onMessage }) {
 
     setLoading(true);
     
-    // Generate shopping_id ONCE for all items in this batch
     const shoppingId = `RTN-SHOP-${Date.now().toString(36).toUpperCase()}`;
     
     try {
-      // Send all items with the SAME shopping_id
       for (const item of validItems) {
         const res = await fetch('/api/shopping-list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            shopping_id: shoppingId, // Same ID for all items
+            shopping_id: shoppingId,
             ...item
           })
         });
@@ -117,7 +156,6 @@ export default function ShoppingListTab({ onMessage }) {
 
       onMessage('success', `${validItems.length} item shopping list berhasil ditambahkan dengan ID: ${shoppingId}`);
       
-      // Reset form to single empty item
       setItems([{
         item_shopping: '',
         quantity: '',
@@ -125,7 +163,7 @@ export default function ShoppingListTab({ onMessage }) {
         price: ''
       }]);
       
-      fetchHistory(); // Refresh history after adding
+      fetchHistory();
     } catch (error) {
       onMessage('error', error.message);
     } finally {
@@ -140,6 +178,14 @@ export default function ShoppingListTab({ onMessage }) {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  };
+
+  const formatDateShort = (dateString) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
     });
   };
 
@@ -253,7 +299,87 @@ export default function ShoppingListTab({ onMessage }) {
         )}
       </div>
 
-      {/* History Section - Always Visible */}
+      {/* Filter & Summary Section */}
+      <div className="bg-white border-2 border-black rounded-lg p-8">
+        <div className="flex items-center space-x-2 mb-6">
+          <Filter className="w-6 h-6" />
+          <h3 className="text-xl font-bold">Filter & Ringkasan Belanja</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-2">Tanggal Mulai</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Tanggal Akhir</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={filterHistory}
+              className="w-full px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-all"
+            >
+              Terapkan Filter
+            </button>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-6">
+            <div className="flex items-center space-x-3 mb-2">
+              <Calendar className="w-6 h-6 text-blue-600" />
+              <p className="text-sm text-blue-700 font-medium">Periode</p>
+            </div>
+            <p className="text-xs text-blue-600 mb-1">
+              {formatDateShort(startDate)} - {formatDateShort(endDate)}
+            </p>
+            <p className="text-2xl font-bold text-blue-900">
+              {filteredHistory.length} transaksi
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg p-6">
+            <div className="flex items-center space-x-3 mb-2">
+              <Package className="w-6 h-6 text-purple-600" />
+              <p className="text-sm text-purple-700 font-medium">Total Item</p>
+            </div>
+            <p className="text-2xl font-bold text-purple-900">
+              {filteredHistory.reduce((sum, shop) => sum + shop.items.length, 0)} item
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg p-6">
+            <div className="flex items-center space-x-3 mb-2">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-green-700 font-medium">Total Belanja</p>
+            </div>
+            <p className="text-xs text-green-600 mb-1">
+              {formatDateShort(startDate)} - {formatDateShort(endDate)}
+            </p>
+            <p className="text-2xl font-bold text-green-900">
+              Rp {totalBelanja.toLocaleString('id-ID')}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* History Section */}
       <div className="bg-white border-2 border-black rounded-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">History Shopping List</h3>
@@ -265,14 +391,14 @@ export default function ShoppingListTab({ onMessage }) {
           </button>
         </div>
 
-        {history.length === 0 ? (
+        {filteredHistory.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>Belum ada history shopping list</p>
+            <p>Tidak ada data shopping list untuk periode ini</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {history.map((shop, idx) => (
+            {filteredHistory.map((shop, idx) => (
               <div key={idx} className="border-2 border-gray-200 rounded-lg p-4 hover:border-black transition-all">
                 <div className="flex justify-between items-start mb-3">
                   <div>
