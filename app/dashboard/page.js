@@ -32,6 +32,17 @@ export default function Dashboard() {
     }
   }, [currentUser]);
 
+  // Set default tab based on role
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === 'worker') {
+        setActiveTab('order'); // Worker default ke Order tab
+      } else {
+        setActiveTab('analytics'); // Admin & Superadmin default ke Analytics
+      }
+    }
+  }, [currentUser]);
+
   const fetchCurrentUser = async () => {
     try {
       const res = await fetch('/api/auth/check');
@@ -100,7 +111,7 @@ export default function Dashboard() {
     if (!currentUser) return false;
     if (currentUser.role === 'superadmin') return true;
     if (currentUser.role === 'admin') return ['analytics', 'order', 'orderlist', 'master', 'shopping', 'stock'].includes(tab);
-    if (currentUser.role === 'worker') return ['order', 'orderlist'].includes(tab);
+    if (currentUser.role === 'worker') return ['order', 'orderlist'].includes(tab); // Worker bisa akses Order dan Order List
     return false;
   };
 
