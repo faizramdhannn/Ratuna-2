@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
     "googleapis": "^128.0.0",
     "jose": "^5.10.0",
     "jsonwebtoken": "^9.0.2",
@@ -19,12 +20,12 @@
     "react-dom": "^18.3.0",
     "react-to-print": "^3.2.0",
     "recharts": "^3.5.1",
-    "tailwind": "^2.3.1",
+    "tailwind-merge": "^3.4.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.22",
-    "eslint": "^8.57.0",
+    "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.7",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18"

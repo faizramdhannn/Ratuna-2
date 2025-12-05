@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { Eye, EyeOff, Edit2, Trash2, X, Save } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit2, Trash2, Search, Package, Filter } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { Input, Select } from '@/components/ui/Input';
+import Badge from '@/components/ui/Badge';
+import Modal, { ModalFooter } from '@/components/ui/Modal';
+import PageHeader from '@/components/ui/PageHeader';
+import { formatCurrency } from '@/lib/utils';
 
 export default function MasterItemTab({ masterItems, categories, onRefresh, onMessage }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     item_name: '',
     category: '',
     hpp: '',
@@ -20,36 +28,70 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
     status: 'draft'
   });
 
-  const handleSubmit = async () => {
-    if (!form.item_name || !form.category || !form.hpp || !form.hpj) {
-      onMessage('error', 'Item name, category, HPP, dan HPJ harus diisi');
-      return;
-    }
+  const filteredItems = useMemo(() => {
+    return masterItems.filter(item => {
+      const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [masterItems, searchQuery, selectedCategory]);
 
-    setLoading(true);
-    try {
-      const res = await fetch('/api/master-items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+  const handleOpenModal = (item = null) => {
+    if (item) {
+      setEditItem(item);
+      setFormData({
+        item_name: item.item_name,
+        category: item.category,
+        hpp: item.hpp,
+        operasional: item.operasional,
+        worker: item.worker,
+        marketing: item.marketing,
+        hpj: item.hpj,
+        net_sales: item.net_sales,
+        status: item.status
       });
+    } else {
+      setEditItem(null);
+      setFormData({
+        item_name: '',
+        category: '',
+        hpp: '',
+        operasional: '',
+        worker: '',
+        marketing: '',
+        hpj: '',
+        net_sales: '',
+        status: 'draft'
+      });
+    }
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const url = editItem ? '/api/master-items' : '/api/master-items';
+      const method = editItem ? 'PUT' : 'POST';
+      const payload = editItem 
+        ? { ...formData, rowIndex: editItem._rowIndex }
+        : formData;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
       const data = await res.json();
+
       if (data.success) {
-        onMessage('success', 'Master item berhasil ditambahkan!');
-        setForm({ 
-          item_name: '', 
-          category: '',
-          hpp: '', 
-          operasional: '', 
-          worker: '', 
-          marketing: '', 
-          hpj: '', 
-          net_sales: '',
-          status: 'draft'
-        });
+        onMessage('success', data.message);
+        setShowModal(false);
         onRefresh();
       } else {
-        onMessage('error', data.error || 'Gagal menambahkan master item');
+        onMessage('error', data.error);
       }
     } catch (error) {
       onMessage('error', 'Terjadi kesalahan');
@@ -57,482 +99,254 @@ export default function MasterItemTab({ masterItems, categories, onRefresh, onMe
     setLoading(false);
   };
 
-  const openEditModal = (item) => {
-    setEditingItem(item);
-    setForm({
-      item_name: item.item_name,
-      category: item.category,
-      hpp: item.hpp || '',
-      operasional: item.operasional || '',
-      worker: item.worker || '',
-      marketing: item.marketing || '',
-      hpj: item.hpj || '',
-      net_sales: item.net_sales || '',
-      status: item.status || 'draft'
-    });
-    setIsEditing(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditing(false);
-    setEditingItem(null);
-    setForm({ 
-      item_name: '', 
-      category: '',
-      hpp: '', 
-      operasional: '', 
-      worker: '', 
-      marketing: '', 
-      hpj: '', 
-      net_sales: '',
-      status: 'draft'
-    });
-  };
-
-  const handleUpdate = async () => {
-    if (!form.item_name || !form.category || !form.hpp || !form.hpj) {
-      onMessage('error', 'Item name, category, HPP, dan HPJ harus diisi');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch('/api/master-items', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          rowIndex: editingItem._rowIndex
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        onMessage('success', 'Master item berhasil diupdate!');
-        closeEditModal();
-        onRefresh();
-      } else {
-        onMessage('error', data.error || 'Gagal mengupdate master item');
-      }
-    } catch (error) {
-      onMessage('error', 'Terjadi kesalahan');
-    }
-    setLoading(false);
-  };
-
-  const toggleStatus = async (item) => {
-    const newStatus = item.status === 'active' ? 'draft' : 'active';
-    
-    try {
-      const res = await fetch('/api/master-items', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...item,
-          status: newStatus
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        onMessage('success', `Item ${newStatus === 'active' ? 'diaktifkan' : 'dijadikan draft'}`);
-        onRefresh();
-      } else {
-        onMessage('error', data.error || 'Gagal mengupdate status');
-      }
-    } catch (error) {
-      onMessage('error', 'Terjadi kesalahan');
-    }
-  };
-
-  const deleteItem = async (item) => {
+  const handleDelete = async (item) => {
     if (!confirm(`Hapus item "${item.item_name}"?`)) return;
 
     try {
       const res = await fetch(`/api/master-items?rowIndex=${item._rowIndex}`, {
         method: 'DELETE'
       });
+
       const data = await res.json();
+
       if (data.success) {
         onMessage('success', 'Item berhasil dihapus');
         onRefresh();
       } else {
-        onMessage('error', data.error || 'Gagal menghapus item');
+        onMessage('error', data.error);
       }
     } catch (error) {
-      onMessage('error', 'Terjadi kesalahan');
+      onMessage('error', 'Gagal menghapus item');
     }
   };
 
+  const getStatusBadge = (status) => {
+    return status === 'active' ? (
+      <Badge variant="success">Active</Badge>
+    ) : (
+      <Badge variant="warning">Draft</Badge>
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Add Item Form */}
-      <div className="bg-white border-2 border-black rounded-lg p-8">
-        <h2 className="text-2xl font-bold mb-6">Tambah Master Item</h2>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <label className="block text-sm font-medium mb-2">Item Name *</label>
+              <CardTitle>Master Item</CardTitle>
+              <CardDescription>
+                Kelola daftar produk dan harga
+              </CardDescription>
+            </div>
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={() => handleOpenModal()}
+            >
+              Tambah Item
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-shopify-gray-500" />
               <input
                 type="text"
-                value={form.item_name}
-                onChange={(e) => setForm({...form, item_name: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="Nama item"
-                disabled={isEditing}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari item..."
+                className="input-shopify pl-10"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Category *</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm({...form, category: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                disabled={isEditing}
-              >
-                <option value="">-- Pilih Category --</option>
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat.category_name}>
-                    {cat.category_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              options={[
+                { value: 'all', label: 'Semua Kategori' },
+                ...categories.map(cat => ({
+                  value: cat.category_name,
+                  label: cat.category_name
+                }))
+              ]}
+            />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">HPP *</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.hpp}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setForm({...form, hpp: value});
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="0"
-                disabled={isEditing}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Operasional</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.operasional}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setForm({...form, operasional: value});
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="0"
-                disabled={isEditing}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Worker</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.worker}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setForm({...form, worker: value});
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="0"
-                disabled={isEditing}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Marketing</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.marketing}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setForm({...form, marketing: value});
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="0"
-                disabled={isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">HPJ *</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.hpj}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setForm({...form, hpj: value});
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="0"
-                disabled={isEditing}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Net Sales</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.net_sales}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setForm({...form, net_sales: value});
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="0"
-                disabled={isEditing}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => setForm({...form, status: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                disabled={isEditing}
-              >
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-              </select>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading || isEditing}
-            className="w-full bg-black text-white py-4 rounded-lg font-medium hover:bg-gray-800 transition-all disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : 'Tambah Master Item'}
-          </button>
-        </div>
-      </div>
-
-      {/* Items List */}
-      <div className="bg-white border-2 border-black rounded-lg p-8">
-        <h3 className="text-xl font-bold mb-4">Daftar Master Items</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b-2 border-black">
-                <th className="text-left py-3 px-4 font-medium">Item Name</th>
-                <th className="text-left py-3 px-4 font-medium">Category</th>
-                <th className="text-left py-3 px-4 font-medium">HPP</th>
-                <th className="text-left py-3 px-4 font-medium">HPJ</th>
-                <th className="text-left py-3 px-4 font-medium">Net Sales</th>
-                <th className="text-center py-3 px-4 font-medium">Status</th>
-                <th className="text-center py-3 px-4 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {masterItems.map((item, idx) => (
-                <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="py-3 px-4 font-medium">{item.item_name}</td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-1 bg-gray-100 rounded text-sm">
-                      {item.category}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">Rp {parseInt(item.hpp || 0).toLocaleString()}</td>
-                  <td className="py-3 px-4">Rp {parseInt(item.hpj || 0).toLocaleString()}</td>
-                  <td className="py-3 px-4">Rp {parseInt(item.net_sales || 0).toLocaleString()}</td>
-                  <td className="py-3 px-4 text-center">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      item.status === 'active' 
-                        ? 'bg-green-200 text-green-800' 
-                        : 'bg-yellow-200 text-yellow-800'
-                    }`}>
-                      {item.status?.toUpperCase() || 'DRAFT'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => toggleStatus(item)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          item.status === 'active'
-                            ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-                            : 'bg-green-100 text-green-600 hover:bg-green-200'
-                        }`}
-                        title={item.status === 'active' ? 'Set Draft' : 'Set Active'}
-                      >
-                        {item.status === 'active' ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => openEditModal(item)}
-                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(item)}
-                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+          {/* Items Table */}
+          <div className="overflow-x-auto">
+            <table className="table-shopify">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Kategori</th>
+                  <th>HPP</th>
+                  <th>HPJ</th>
+                  <th>Net Sales</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Edit Modal */}
-      {isEditing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold">Edit Master Item</h3>
-              <button
-                onClick={closeEditModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Item Name *</label>
-                  <input
-                    type="text"
-                    value={form.item_name}
-                    onChange={(e) => setForm({...form, item_name: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="Nama item"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Category *</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({...form, category: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                  >
-                    <option value="">-- Pilih Category --</option>
-                    {categories.map((cat, idx) => (
-                      <option key={idx} value={cat.category_name}>
-                        {cat.category_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">HPP *</label>
-                  <input
-                    type="number"
-                    value={form.hpp}
-                    onChange={(e) => setForm({...form, hpp: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Operasional</label>
-                  <input
-                    type="number"
-                    value={form.operasional}
-                    onChange={(e) => setForm({...form, operasional: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Worker</label>
-                  <input
-                    type="number"
-                    value={form.worker}
-                    onChange={(e) => setForm({...form, worker: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Marketing</label>
-                  <input
-                    type="number"
-                    value={form.marketing}
-                    onChange={(e) => setForm({...form, marketing: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">HPJ *</label>
-                  <input
-                    type="number"
-                    value={form.hpj}
-                    onChange={(e) => setForm({...form, hpj: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Net Sales</label>
-                  <input
-                    type="number"
-                    value={form.net_sales}
-                    onChange={(e) => setForm({...form, net_sales: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Status</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm({...form, status: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={closeEditModal}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-100 transition-all"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleUpdate}
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
-                >
-                  <Save className="w-5 h-5" />
-                  <span>{loading ? 'Processing...' : 'Simpan Perubahan'}</span>
-                </button>
-              </div>
-            </div>
+              </thead>
+              <tbody>
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-12 text-shopify-gray-400">
+                      Tidak ada data
+                    </td>
+                  </tr>
+                ) : (
+                  filteredItems.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="font-medium">{item.item_name}</td>
+                      <td>{item.category}</td>
+                      <td>{formatCurrency(item.hpp)}</td>
+                      <td className="font-semibold">{formatCurrency(item.hpj)}</td>
+                      <td className="text-shopify-accent-success font-medium">
+                        {formatCurrency(item.net_sales)}
+                      </td>
+                      <td>{getStatusBadge(item.status)}</td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={Edit2}
+                            onClick={() => handleOpenModal(item)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={Trash2}
+                            onClick={() => handleDelete(item)}
+                            className="text-shopify-accent-critical hover:bg-red-900/20"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
-    </div>
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editItem ? 'Edit Item' : 'Tambah Item Baru'}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Nama Item"
+              required
+              value={formData.item_name}
+              onChange={(e) => setFormData({...formData, item_name: e.target.value})}
+              placeholder="Masukkan nama item"
+            />
+            <Select
+              label="Kategori"
+              required
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              options={[
+                { value: '', label: 'Pilih Kategori' },
+                ...categories.map(cat => ({
+                  value: cat.category_name,
+                  label: cat.category_name
+                }))
+              ]}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="HPP (Harga Pokok Penjualan)"
+              type="number"
+              required
+              value={formData.hpp}
+              onChange={(e) => setFormData({...formData, hpp: e.target.value})}
+              placeholder="0"
+            />
+            <Input
+              label="Operasional"
+              type="number"
+              value={formData.operasional}
+              onChange={(e) => setFormData({...formData, operasional: e.target.value})}
+              placeholder="0"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Worker"
+              type="number"
+              value={formData.worker}
+              onChange={(e) => setFormData({...formData, worker: e.target.value})}
+              placeholder="0"
+            />
+            <Input
+              label="Marketing"
+              type="number"
+              value={formData.marketing}
+              onChange={(e) => setFormData({...formData, marketing: e.target.value})}
+              placeholder="0"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="HPJ (Harga Pokok Jual)"
+              type="number"
+              required
+              value={formData.hpj}
+              onChange={(e) => setFormData({...formData, hpj: e.target.value})}
+              placeholder="0"
+            />
+            <Input
+              label="Net Sales"
+              type="number"
+              value={formData.net_sales}
+              onChange={(e) => setFormData({...formData, net_sales: e.target.value})}
+              placeholder="0"
+            />
+          </div>
+
+          <Select
+            label="Status"
+            required
+            value={formData.status}
+            onChange={(e) => setFormData({...formData, status: e.target.value})}
+            options={[
+              { value: 'draft', label: 'Draft' },
+              { value: 'active', label: 'Active' }
+            ]}
+          />
+
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+              disabled={loading}
+            >
+              Batal
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+            >
+              {editItem ? 'Update' : 'Simpan'}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
+    </>
   );
 }
