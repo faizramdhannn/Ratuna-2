@@ -19,12 +19,13 @@
     "react-dom": "^18.3.0",
     "react-to-print": "^3.2.0",
     "recharts": "^3.5.1",
+    "tailwind": "^2.3.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.22",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0",
+    "eslint-config-next": "^16.0.7",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18"
   }

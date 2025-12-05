@@ -2,35 +2,191 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar */
+@layer base {
+  * {
+    @apply border-shopify-gray-300;
+  }
+  
+  body {
+    @apply bg-shopify-dark text-white antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+
+  input, textarea, select {
+    @apply text-shopify-dark;
+  }
+}
+
+@layer components {
+  /* Shopify Button Styles */
+  .btn-shopify {
+    @apply px-4 py-2.5 rounded-shopify font-medium transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-shopify-dark;
+  }
+
+  .btn-primary {
+    @apply btn-shopify bg-shopify-accent-primary text-white hover:bg-opacity-90 
+           focus:ring-shopify-accent-primary shadow-sm hover:shadow;
+  }
+
+  .btn-success {
+    @apply btn-shopify bg-shopify-accent-success text-white hover:bg-opacity-90 
+           focus:ring-shopify-accent-success shadow-sm hover:shadow;
+  }
+
+  .btn-critical {
+    @apply btn-shopify bg-shopify-accent-critical text-white hover:bg-opacity-90 
+           focus:ring-shopify-accent-critical shadow-sm hover:shadow;
+  }
+
+  .btn-secondary {
+    @apply btn-shopify bg-shopify-gray-700 text-white hover:bg-shopify-gray-600 
+           focus:ring-shopify-gray-500;
+  }
+
+  .btn-ghost {
+    @apply btn-shopify bg-transparent text-shopify-gray-300 hover:bg-shopify-gray-800 
+           focus:ring-shopify-gray-600;
+  }
+
+  /* Shopify Card Styles */
+  .card-shopify {
+    @apply bg-shopify-charcoal rounded-shopify-lg border border-shopify-gray-800 
+           shadow-shopify transition-all duration-200;
+  }
+
+  .card-shopify-hover {
+    @apply card-shopify hover:border-shopify-gray-700 hover:shadow-shopify-lg;
+  }
+
+  /* Shopify Input Styles */
+  .input-shopify {
+    @apply w-full px-4 py-2.5 bg-shopify-darker border border-shopify-gray-800 
+           rounded-shopify text-white placeholder-shopify-gray-500
+           focus:outline-none focus:ring-2 focus:ring-shopify-accent-primary 
+           focus:border-transparent transition-all duration-200;
+  }
+
+  .input-shopify-error {
+    @apply input-shopify border-shopify-accent-critical focus:ring-shopify-accent-critical;
+  }
+
+  /* Shopify Badge Styles */
+  .badge-shopify {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge-shopify bg-shopify-green-900 text-shopify-green-300 
+           border border-shopify-green-800;
+  }
+
+  .badge-warning {
+    @apply badge-shopify bg-yellow-900 text-yellow-300 border border-yellow-800;
+  }
+
+  .badge-critical {
+    @apply badge-shopify bg-red-900 text-red-300 border border-red-800;
+  }
+
+  .badge-info {
+    @apply badge-shopify bg-shopify-blue-900 text-shopify-blue-300 
+           border border-shopify-blue-800;
+  }
+
+  /* Shopify Table Styles */
+  .table-shopify {
+    @apply w-full border-collapse;
+  }
+
+  .table-shopify thead {
+    @apply border-b border-shopify-gray-800;
+  }
+
+  .table-shopify th {
+    @apply px-4 py-3 text-left text-xs font-medium text-shopify-gray-400 
+           uppercase tracking-wider;
+  }
+
+  .table-shopify td {
+    @apply px-4 py-4 text-sm text-shopify-gray-200;
+  }
+
+  .table-shopify tbody tr {
+    @apply border-b border-shopify-gray-800 hover:bg-shopify-darker 
+           transition-colors duration-150;
+  }
+
+  /* Shopify Scrollbar */
+  .scrollbar-shopify::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  .scrollbar-shopify::-webkit-scrollbar-track {
+    @apply bg-shopify-darker rounded;
+  }
+
+  .scrollbar-shopify::-webkit-scrollbar-thumb {
+    @apply bg-shopify-gray-700 rounded hover:bg-shopify-gray-600;
+  }
+
+  /* Loading Spinner */
+  .spinner-shopify {
+    @apply inline-block w-5 h-5 border-2 border-current border-t-transparent 
+           rounded-full animate-spin;
+  }
+
+  /* Divider */
+  .divider-shopify {
+    @apply border-t border-shopify-gray-800 my-6;
+  }
+
+  /* Focus Ring */
+  .focus-ring-shopify {
+    @apply focus:outline-none focus:ring-2 focus:ring-shopify-accent-primary 
+           focus:ring-offset-2 focus:ring-offset-shopify-dark;
+  }
+}
+
 @layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Glassmorphism effect */
+  .glass-shopify {
+    @apply bg-shopify-charcoal bg-opacity-60 backdrop-blur-lg border border-shopify-gray-800;
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-shopify {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+  }
+
+  .bg-gradient-accent {
+    background: linear-gradient(135deg, #5C6AC4 0%, #4a5ab8 100%);
+  }
 }
 
-/* Tablet specific adjustments */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .lg\:col-span-8 {
-    grid-column: span 7 / span 7;
-  }
-  .lg\:col-span-4 {
-    grid-column: span 5 / span 5;
-  }
-}
-
-/* Print styles for thermal printer 58mm */
+/* Print styles untuk thermal printer 58mm */
 @media print {
-  /* Hide everything by default */
   body * {
     visibility: hidden !important;
   }
   
-  /* Show only the bill */
   .bill-container,
   .bill-container * {
     visibility: visible !important;
@@ -44,7 +200,6 @@
     max-width: 58mm !important;
   }
   
-  /* Hide modal buttons and backgrounds during print */
   .no-print,
   [class*="fixed"],
   [class*="modal"],
@@ -53,18 +208,11 @@
     display: none !important;
   }
   
-  /* Optimize for thermal printer (58mm) */
   @page {
     size: 58mm auto;
     margin: 0;
   }
   
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Ensure black text prints properly */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
