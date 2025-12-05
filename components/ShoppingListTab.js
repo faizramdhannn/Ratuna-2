@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Calendar, Package, Filter } from 'lucide-react';
 
+const SHOPPING_CATEGORIES = ['Karyawan', 'Bahan', 'Operasional'];
+
 export default function ShoppingListTab({ onMessage }) {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([{
     item_shopping: '',
+    category: '',
     quantity: '',
     unit: '',
     price: ''
@@ -16,8 +19,10 @@ export default function ShoppingListTab({ onMessage }) {
   // Filter states
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [totalBelanja, setTotalBelanja] = useState(0);
+  const [categoryTotals, setCategoryTotals] = useState({});
 
   useEffect(() => {
     // Set default dates (last 7 days)
@@ -34,11 +39,11 @@ export default function ShoppingListTab({ onMessage }) {
   }, []);
 
   useEffect(() => {
-    // Filter history whenever dates or history changes
+    // Filter history whenever dates, category filter, or history changes
     if (startDate && endDate) {
       filterHistory();
     }
-  }, [startDate, endDate, history]);
+  }, [startDate, endDate, categoryFilter, history]);
 
   const fetchHistory = async () => {
     try {
@@ -85,19 +90,50 @@ export default function ShoppingListTab({ onMessage }) {
 
     const filtered = history.filter(shop => {
       const shopDate = new Date(shop.shopping_date);
-      return shopDate >= start && shopDate <= end;
+      const isInDateRange = shopDate >= start && shopDate <= end;
+      
+      // Filter by category if not 'all'
+      if (categoryFilter !== 'all') {
+        const hasCategory = shop.items.some(item => item.category === categoryFilter);
+        return isInDateRange && hasCategory;
+      }
+      
+      return isInDateRange;
     });
 
     setFilteredHistory(filtered);
     
-    // Calculate total
-    const total = filtered.reduce((sum, shop) => sum + shop.total, 0);
+    // Calculate totals
+    let total = 0;
+    const catTotals = {
+      Karyawan: 0,
+      Bahan: 0,
+      Operasional: 0
+    };
+
+    filtered.forEach(shop => {
+      shop.items.forEach(item => {
+        const itemTotal = parseFloat(item.price) || 0;
+        
+        // Only count if category filter matches or is 'all'
+        if (categoryFilter === 'all' || item.category === categoryFilter) {
+          total += itemTotal;
+          
+          if (item.category && catTotals.hasOwnProperty(item.category)) {
+            catTotals[item.category] += itemTotal;
+          }
+        }
+      });
+    });
+
     setTotalBelanja(total);
+    setCategoryTotals(catTotals);
   };
 
   const addItem = () => {
     setItems([...items, {
       item_shopping: '',
+      category: '',
       quantity: '',
       unit: '',
       price: ''
@@ -120,11 +156,11 @@ export default function ShoppingListTab({ onMessage }) {
 
   const handleSubmit = async () => {
     const validItems = items.filter(item => 
-      item.item_shopping && item.quantity && item.unit && item.price
+      item.item_shopping && item.category && item.quantity && item.unit && item.price
     );
 
     if (validItems.length === 0) {
-      onMessage('error', 'Semua field harus diisi untuk minimal 1 item');
+      onMessage('error', 'Semua field termasuk category harus diisi untuk minimal 1 item');
       return;
     }
 
@@ -158,6 +194,7 @@ export default function ShoppingListTab({ onMessage }) {
       
       setItems([{
         item_shopping: '',
+        category: '',
         quantity: '',
         unit: '',
         price: ''
@@ -189,6 +226,19 @@ export default function ShoppingListTab({ onMessage }) {
     });
   };
 
+  const getCategoryColor = (category) => {
+    switch(category) {
+      case 'Karyawan':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'Bahan':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'Operasional':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Add Shopping List Form */}
@@ -206,16 +256,17 @@ export default function ShoppingListTab({ onMessage }) {
 
         <div className="space-y-3 mb-6">
           <div className="grid grid-cols-12 gap-3 px-2 text-sm font-medium text-gray-600">
-            <div className="col-span-4">Nama Item</div>
+            <div className="col-span-3">Nama Item</div>
+            <div className="col-span-2">Category</div>
             <div className="col-span-2">Quantity</div>
-            <div className="col-span-2">Unit</div>
+            <div className="col-span-1">Unit</div>
             <div className="col-span-3">Total Harga</div>
             <div className="col-span-1"></div>
           </div>
 
           {items.map((item, index) => (
             <div key={index} className="grid grid-cols-12 gap-3 items-center">
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <input
                   type="text"
                   value={item.item_shopping}
@@ -223,6 +274,18 @@ export default function ShoppingListTab({ onMessage }) {
                   className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
                   placeholder="Nama item"
                 />
+              </div>
+              <div className="col-span-2">
+                <select
+                  value={item.category}
+                  onChange={(e) => updateItem(index, 'category', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+                >
+                  <option value="">Pilih Category</option>
+                  {SHOPPING_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
               <div className="col-span-2">
                 <input
@@ -235,13 +298,13 @@ export default function ShoppingListTab({ onMessage }) {
                   step="0.01"
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <input
                   type="text"
                   value={item.unit}
                   onChange={(e) => updateItem(index, 'unit', e.target.value)}
                   className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                  placeholder="kg/pcs/box"
+                  placeholder="kg/pcs"
                 />
               </div>
               <div className="col-span-3">
@@ -326,10 +389,24 @@ export default function ShoppingListTab({ onMessage }) {
               className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Filter Category</label>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
+            >
+              <option value="all">Semua Category</option>
+              {SHOPPING_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-2">
               <Calendar className="w-6 h-6 text-blue-600" />
@@ -349,7 +426,12 @@ export default function ShoppingListTab({ onMessage }) {
               <p className="text-sm text-purple-700 font-medium">Total Item</p>
             </div>
             <p className="text-2xl font-bold text-purple-900">
-              {filteredHistory.reduce((sum, shop) => sum + shop.items.length, 0)} item
+              {filteredHistory.reduce((sum, shop) => {
+                const itemCount = categoryFilter === 'all' 
+                  ? shop.items.length 
+                  : shop.items.filter(item => item.category === categoryFilter).length;
+                return sum + itemCount;
+              }, 0)} item
             </p>
           </div>
 
@@ -361,13 +443,37 @@ export default function ShoppingListTab({ onMessage }) {
               <p className="text-sm text-green-700 font-medium">Total Belanja</p>
             </div>
             <p className="text-xs text-green-600 mb-1">
-              {formatDateShort(startDate)} - {formatDateShort(endDate)}
+              {categoryFilter !== 'all' ? categoryFilter : 'Semua'}
             </p>
             <p className="text-2xl font-bold text-green-900">
               Rp {totalBelanja.toLocaleString('id-ID')}
             </p>
           </div>
         </div>
+
+        {/* Category Breakdown */}
+        {categoryFilter === 'all' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="border-2 border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-700 font-medium mb-1">Karyawan</p>
+              <p className="text-xl font-bold text-blue-900">
+                Rp {categoryTotals.Karyawan?.toLocaleString('id-ID') || '0'}
+              </p>
+            </div>
+            <div className="border-2 border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-700 font-medium mb-1">Bahan</p>
+              <p className="text-xl font-bold text-green-900">
+                Rp {categoryTotals.Bahan?.toLocaleString('id-ID') || '0'}
+              </p>
+            </div>
+            <div className="border-2 border-purple-200 rounded-lg p-4">
+              <p className="text-sm text-purple-700 font-medium mb-1">Operasional</p>
+              <p className="text-xl font-bold text-purple-900">
+                Rp {categoryTotals.Operasional?.toLocaleString('id-ID') || '0'}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* History Section */}
@@ -389,47 +495,61 @@ export default function ShoppingListTab({ onMessage }) {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredHistory.map((shop, idx) => (
-              <div key={idx} className="border-2 border-gray-200 rounded-lg p-4 hover:border-black transition-all">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h4 className="font-bold text-lg">{shop.shopping_id}</h4>
-                    <p className="text-sm text-gray-600 flex items-center space-x-2 mt-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(shop.shopping_date)}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {shop.items.length} item{shop.items.length > 1 ? 's' : ''}
-                    </p>
+            {filteredHistory.map((shop, idx) => {
+              const displayItems = categoryFilter === 'all' 
+                ? shop.items 
+                : shop.items.filter(item => item.category === categoryFilter);
+              
+              const displayTotal = displayItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+
+              if (displayItems.length === 0) return null;
+
+              return (
+                <div key={idx} className="border-2 border-gray-200 rounded-lg p-4 hover:border-black transition-all">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-bold text-lg">{shop.shopping_id}</h4>
+                      <p className="text-sm text-gray-600 flex items-center space-x-2 mt-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(shop.shopping_date)}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {displayItems.length} item{displayItems.length > 1 ? 's' : ''}
+                        {categoryFilter !== 'all' && ` (${categoryFilter})`}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">Total</p>
+                      <p className="text-xl font-bold text-green-600">
+                        Rp {displayTotal.toLocaleString('id-ID')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">Total</p>
-                    <p className="text-xl font-bold text-green-600">
-                      Rp {shop.total.toLocaleString('id-ID')}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="space-y-2">
-                    {shop.items.map((item, itemIdx) => (
-                      <div key={itemIdx} className="flex justify-between items-center text-sm">
-                        <div className="flex items-center space-x-2">
-                          <Package className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{item.item_shopping}</span>
-                          <span className="text-gray-500">
-                            ({item.quantity} {item.unit})
+                  
+                  <div className="border-t border-gray-200 pt-3">
+                    <div className="space-y-2">
+                      {displayItems.map((item, itemIdx) => (
+                        <div key={itemIdx} className="flex justify-between items-center text-sm">
+                          <div className="flex items-center space-x-2 flex-1">
+                            <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="font-medium">{item.item_shopping}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs border ${getCategoryColor(item.category)}`}>
+                              {item.category || '-'}
+                            </span>
+                            <span className="text-gray-500">
+                              ({item.quantity} {item.unit})
+                            </span>
+                          </div>
+                          <span className="font-bold ml-2">
+                            Rp {parseFloat(item.price || 0).toLocaleString('id-ID')}
                           </span>
                         </div>
-                        <span className="font-bold">
-                          Rp {item.total.toLocaleString('id-ID')}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

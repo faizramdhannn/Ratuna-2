@@ -27,11 +27,20 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { shopping_id, item_shopping, quantity, unit, price } = body;
+    const { shopping_id, item_shopping, category, quantity, unit, price } = body;
 
-    if (!item_shopping || !quantity || !unit || !price) {
+    if (!item_shopping || !category || !quantity || !unit || !price) {
       return NextResponse.json(
-        { error: 'Semua field harus diisi' },
+        { error: 'Semua field termasuk category harus diisi' },
+        { status: 400 }
+      );
+    }
+
+    // Validate category
+    const validCategories = ['Karyawan', 'Bahan', 'Operasional'];
+    if (!validCategories.includes(category)) {
+      return NextResponse.json(
+        { error: 'Category tidak valid. Pilih: Karyawan, Bahan, atau Operasional' },
         { status: 400 }
       );
     }
@@ -44,6 +53,7 @@ export async function POST(request) {
       finalShoppingId,
       shopping_date,
       item_shopping,
+      category,
       quantity,
       unit,
       price
@@ -58,6 +68,7 @@ export async function POST(request) {
         shopping_id: finalShoppingId,
         shopping_date,
         item_shopping,
+        category,
         quantity,
         unit,
         price
