@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Package, ClipboardList, Boxes, Users, List, BarChart3 } from 'lucide-react';
+import { ShoppingCart, Package, ClipboardList, Boxes, Users, List, BarChart3, CheckCircle, XCircle } from 'lucide-react';
 import OrderTab from '@/components/order/OrderTab';
 import OrderListTab from '@/components/order/OrderListTab';
 import MasterItemTab from '@/components/MasterItemTab';
@@ -36,9 +36,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (currentUser) {
       if (currentUser.role === 'worker') {
-        setActiveTab('order'); // Worker default ke Order tab
+        setActiveTab('order');
       } else {
-        setActiveTab('analytics'); // Admin & Superadmin default ke Analytics
+        setActiveTab('analytics');
       }
     }
   }, [currentUser]);
@@ -97,7 +97,7 @@ export default function Dashboard() {
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    setTimeout(() => setMessage({ type: '', text: '' }), 4000);
   };
 
   useEffect(() => {
@@ -111,150 +111,115 @@ export default function Dashboard() {
     if (!currentUser) return false;
     if (currentUser.role === 'superadmin') return true;
     if (currentUser.role === 'admin') return ['analytics', 'order', 'orderlist', 'master', 'shopping', 'stock'].includes(tab);
-    if (currentUser.role === 'worker') return ['order', 'orderlist'].includes(tab); // Worker bisa akses Order dan Order List
+    if (currentUser.role === 'worker') return ['order', 'orderlist'].includes(tab);
     return false;
   };
 
+  const tabs = [
+    { id: 'analytics', label: 'Dashboard', icon: BarChart3, requiredRole: ['superadmin', 'admin'] },
+    { id: 'order', label: 'Order', icon: ShoppingCart, requiredRole: ['superadmin', 'admin', 'worker'] },
+    { id: 'orderlist', label: 'Order List', icon: List, requiredRole: ['superadmin', 'admin', 'worker'] },
+    { id: 'master', label: 'Master Item', icon: Package, requiredRole: ['superadmin', 'admin'] },
+    { id: 'shopping', label: 'Shopping List', icon: ClipboardList, requiredRole: ['superadmin', 'admin'] },
+    { id: 'stock', label: 'Stock', icon: Boxes, requiredRole: ['superadmin', 'admin'] },
+    { id: 'users', label: 'Users', icon: Users, requiredRole: ['superadmin'] },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-shopify-dark">
+      {/* Notification Toast */}
       {message.text && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
-          message.type === 'success' ? 'bg-black text-white' : 'bg-red-600 text-white'
-        }`}>
-          {message.text}
+        <div className="fixed top-4 right-4 z-50 animate-slide-down">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-shopify-lg shadow-shopify-xl border ${
+            message.type === 'success' 
+              ? 'bg-shopify-accent-success border-green-600 text-white' 
+              : 'bg-shopify-accent-critical border-red-600 text-white'
+          }`}>
+            {message.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <XCircle className="w-5 h-5 flex-shrink-0" />
+            )}
+            <span className="font-medium">{message.text}</span>
+          </div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg overflow-x-auto">
-          {canAccessTab('analytics') && (
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'analytics' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <BarChart3 className="w-5 h-5" />
-              <span>Dashboard</span>
-            </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {/* Tabs Navigation */}
+        <div className="bg-shopify-charcoal border border-shopify-gray-800 rounded-shopify-lg p-2 mb-6 shadow-shopify">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+            {tabs.map((tab) => {
+              if (!canAccessTab(tab.id)) return null;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-shopify font-medium transition-all whitespace-nowrap ${
+                    activeTab === tab.id 
+                      ? 'bg-shopify-accent-primary text-white shadow-shopify' 
+                      : 'text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="pb-8">
+          {activeTab === 'analytics' && (
+            <AnalyticsDashboard onMessage={showMessage} />
           )}
-          {canAccessTab('order') && (
-            <button
-              onClick={() => setActiveTab('order')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'order' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span>Order</span>
-            </button>
+
+          {activeTab === 'order' && (
+            <OrderTab
+              masterItems={masterItems}
+              stocks={stocks}
+              categories={categories}
+              currentUser={currentUser}
+              onMessage={showMessage}
+            />
           )}
-          {canAccessTab('orderlist') && (
-            <button
-              onClick={() => setActiveTab('orderlist')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'orderlist' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <List className="w-5 h-5" />
-              <span>Order List</span>
-            </button>
+          
+          {activeTab === 'orderlist' && (
+            <OrderListTab onMessage={showMessage} />
           )}
-          {canAccessTab('master') && (
-            <button
-              onClick={() => setActiveTab('master')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'master' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Package className="w-5 h-5" />
-              <span>Master Item</span>
-            </button>
+          
+          {activeTab === 'master' && (
+            <MasterItemTab
+              masterItems={masterItems}
+              categories={categories}
+              onRefresh={fetchMasterItems}
+              onMessage={showMessage}
+            />
           )}
-          {canAccessTab('shopping') && (
-            <button
-              onClick={() => setActiveTab('shopping')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'shopping' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <ClipboardList className="w-5 h-5" />
-              <span>Shopping List</span>
-            </button>
+
+          {activeTab === 'shopping' && (
+            <ShoppingListTab onMessage={showMessage} />
           )}
-          {canAccessTab('stock') && (
-            <button
-              onClick={() => setActiveTab('stock')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'stock' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Boxes className="w-5 h-5" />
-              <span>Stock</span>
-            </button>
+
+          {activeTab === 'stock' && (
+            <StockTab
+              stocks={stocks}
+              currentUser={currentUser}
+              onRefresh={fetchStocks}
+              onMessage={showMessage}
+            />
           )}
-          {canAccessTab('users') && (
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                activeTab === 'users' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span>Users</span>
-            </button>
+
+          {activeTab === 'users' && currentUser?.role === 'superadmin' && (
+            <UsersTab
+              users={users}
+              onRefresh={fetchUsers}
+              onMessage={showMessage}
+            />
           )}
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'analytics' && (
-          <AnalyticsDashboard onMessage={showMessage} />
-        )}
-
-        {activeTab === 'order' && (
-          <OrderTab
-            masterItems={masterItems}
-            stocks={stocks}
-            categories={categories}
-            currentUser={currentUser}
-            onMessage={showMessage}
-          />
-        )}
-        
-        {activeTab === 'orderlist' && (
-          <OrderListTab onMessage={showMessage} />
-        )}
-        
-        {activeTab === 'master' && (
-          <MasterItemTab
-            masterItems={masterItems}
-            categories={categories}
-            onRefresh={fetchMasterItems}
-            onMessage={showMessage}
-          />
-        )}
-
-        {activeTab === 'shopping' && (
-          <ShoppingListTab onMessage={showMessage} />
-        )}
-
-        {activeTab === 'stock' && (
-          <StockTab
-            stocks={stocks}
-            currentUser={currentUser}
-            onRefresh={fetchStocks}
-            onMessage={showMessage}
-          />
-        )}
-
-        {activeTab === 'users' && currentUser?.role === 'superadmin' && (
-          <UsersTab
-            users={users}
-            onRefresh={fetchUsers}
-            onMessage={showMessage}
-          />
-        )}
       </div>
     </div>
   );

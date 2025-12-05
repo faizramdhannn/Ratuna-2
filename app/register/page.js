@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +13,8 @@ export default function RegisterPage() {
     confirmPassword: '',
     full_name: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -24,6 +26,12 @@ export default function RegisterPage() {
 
     if (formData.password !== formData.confirmPassword) {
       setError('Password tidak cocok');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password minimal 6 karakter');
       setLoading(false);
       return;
     }
@@ -58,18 +66,23 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        <div className="w-full max-w-md p-8">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-black text-center">
-            <div className="inline-block p-4 bg-green-500 rounded-full mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+      <div className="min-h-screen flex items-center justify-center bg-shopify-dark p-4">
+        <div className="w-full max-w-md">
+          <div className="card-shopify p-8 text-center shadow-shopify-xl">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-shopify-accent-success/20 rounded-full mb-4">
+              <CheckCircle2 className="w-10 h-10 text-shopify-accent-success" />
             </div>
-            <h2 className="text-2xl font-bold mb-4">Registrasi Berhasil!</h2>
-            <p className="text-gray-600 mb-2">Akun Anda telah dibuat.</p>
-            <p className="text-gray-600 mb-6">Menunggu approval dari Super Admin...</p>
-            <p className="text-sm text-gray-500">Redirecting to login...</p>
+            <h2 className="text-2xl font-bold text-white mb-3">Registration Successful!</h2>
+            <p className="text-shopify-gray-400 mb-2">
+              Your account has been created successfully.
+            </p>
+            <p className="text-sm text-shopify-gray-500 mb-6">
+              Waiting for approval from Super Admin...
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-shopify-gray-400">
+              <div className="spinner-shopify" />
+              <span>Redirecting to login...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -77,97 +90,166 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 py-12">
-      <div className="w-full max-w-md p-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-black">
-          <div className="text-center mb-8">
-            <div className="inline-block p-4 bg-black rounded-full mb-4">
-              <UserPlus className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold mb-2">Daftar Akun</h1>
-            <p className="text-gray-600">Buat akun baru untuk sistem kasir</p>
+    <div className="min-h-screen flex items-center justify-center bg-shopify-dark p-4">
+      <div className="w-full max-w-md">
+        {/* Logo & Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-accent rounded-shopify-lg mb-4 shadow-shopify-lg">
+            <img
+              src="/Logo_Ratuna.png"
+              alt="Ratuna Logo"
+              className="w-16 h-16 object-contain"
+            />
           </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+          <p className="text-shopify-gray-400">Register for Ratuna POS System</p>
+        </div>
 
+        {/* Register Card */}
+        <div className="card-shopify p-8 shadow-shopify-xl">
           {error && (
-            <div className="mb-6 p-4 bg-red-100 border-2 border-red-500 rounded-lg text-red-700 text-sm">
-              {error}
+            <div className="mb-6 p-4 bg-shopify-accent-critical/10 border border-shopify-accent-critical/30 rounded-shopify flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-shopify-accent-critical flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-shopify-accent-critical">{error}</p>
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-bold mb-2">Nama Lengkap</label>
+              <label className="block text-sm font-medium text-shopify-gray-300 mb-2">
+                Full Name <span className="text-shopify-accent-critical">*</span>
+              </label>
               <input
                 type="text"
                 value={formData.full_name}
                 onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="Masukkan nama lengkap"
+                className="input-shopify"
+                placeholder="Enter your full name"
                 required
+                autoFocus
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold mb-2">Username</label>
+              <label className="block text-sm font-medium text-shopify-gray-300 mb-2">
+                Username <span className="text-shopify-accent-critical">*</span>
+              </label>
               <input
                 type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({...formData, username: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="Pilih username"
+                className="input-shopify"
+                placeholder="Choose a username"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold mb-2">Password</label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="Masukkan password"
-                required
-                minLength={6}
-              />
+              <label className="block text-sm font-medium text-shopify-gray-300 mb-2">
+                Password <span className="text-shopify-accent-critical">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  className="input-shopify pr-12"
+                  placeholder="Create a password"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800 rounded transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-shopify-gray-500 mt-1">
+                Minimum 6 characters
+              </p>
             </div>
 
             <div>
-              <label className="block text-sm font-bold mb-2">Konfirmasi Password</label>
-              <input
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-                placeholder="Ketik ulang password"
-                required
-                minLength={6}
-              />
+              <label className="block text-sm font-medium text-shopify-gray-300 mb-2">
+                Confirm Password <span className="text-shopify-accent-critical">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                  className="input-shopify pr-12"
+                  placeholder="Confirm your password"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800 rounded transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white py-4 rounded-lg font-bold hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full flex items-center justify-center gap-2 py-3 text-base"
             >
-              {loading ? 'Processing...' : 'Daftar'}
+              {loading ? (
+                <>
+                  <div className="spinner-shopify" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-5 h-5" />
+                  <span>Create Account</span>
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
-              Sudah punya akun?{' '}
-              <Link href="/login" className="font-bold text-black hover:underline">
-                Login di sini
-              </Link>
+          <div className="mt-6 pt-6 border-t border-shopify-gray-800">
+            <p className="text-xs text-shopify-gray-500 text-center">
+              By creating an account, you agree that your account will require 
+              approval from a Super Admin before you can access the system.
             </p>
           </div>
+        </div>
 
-          <div className="mt-6 pt-6 border-t-2 border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Setelah registrasi, akun Anda akan menunggu approval dari Super Admin
-            </p>
-          </div>
+        {/* Login Link */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-shopify-gray-400">
+            Already have an account?{' '}
+            <Link 
+              href="/login" 
+              className="text-shopify-accent-primary hover:text-shopify-accent-primary/80 font-medium transition-colors"
+            >
+              Sign in here
+            </Link>
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-shopify-gray-500">
+            © 2024 Ratuna. All rights reserved.
+          </p>
         </div>
       </div>
     </div>
