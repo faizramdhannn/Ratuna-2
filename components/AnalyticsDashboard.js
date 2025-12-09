@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -8,7 +8,8 @@ import {
   Package,
   Calendar,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Filter
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { formatCurrency, formatNumber } from '@/lib/utils';
@@ -18,6 +19,9 @@ export default function AnalyticsDashboard({ onMessage }) {
   const [shoppingList, setShoppingList] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState('7days');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -47,12 +51,42 @@ export default function AnalyticsDashboard({ onMessage }) {
     setLoading(false);
   };
 
+  const getFilteredOrders = useMemo(() => {
+    const now = new Date();
+    let startDate;
+
+    switch(dateFilter) {
+      case 'today':
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+      case '7days':
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        break;
+      case '30days':
+        startDate = new Date(now.setDate(now.getDate() - 30));
+        break;
+      case '90days':
+        startDate = new Date(now.setDate(now.getDate() - 90));
+        break;
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          return orders.filter(order => {
+            const orderDate = new Date(order.created_at);
+            return orderDate >= new Date(customStartDate) && orderDate <= new Date(customEndDate);
+          });
+        }
+        return orders;
+      default:
+        return orders;
+    }
+
+    return orders.filter(order => new Date(order.created_at) >= startDate);
+  }, [orders, dateFilter, customStartDate, customEndDate]);
+
   // Calculate metrics
-  const totalRevenue = orders.reduce((sum, order) => sum + parseInt(order.total_amount || 0), 0);
-  const totalExpenses = shoppingList.reduce((sum, item) => 
-    sum + (parseInt(item.price || 0)), 0
-  );
-  const totalOrders = orders.length;
+  const totalRevenue = getFilteredOrders.reduce((sum, order) => sum + parseInt(order.total_amount || 0), 0);
+  const totalExpenses = shoppingList.reduce((sum, item) => sum + parseInt(item.price || 0), 0);
+  const totalOrders = getFilteredOrders.length;
   const lowStockItems = stocks.filter(s => parseInt(s.quantity) < 10).length;
   const outOfStockItems = stocks.filter(s => parseInt(s.quantity) === 0).length;
 
@@ -70,6 +104,25 @@ export default function AnalyticsDashboard({ onMessage }) {
   const profitPercentage = totalRevenue > 0 
     ? ((profit / totalRevenue) * 100).toFixed(1) 
     : 0;
+
+  // Chart data
+  const chartData = useMemo(() => {
+    const dailyRevenue = {};
+    getFilteredOrders.forEach(order => {
+      const date = new Date(order.created_at).toLocaleDateString('id-ID', { 
+        day: '2-digit', 
+        month: 'short' 
+      });
+      dailyRevenue[date] = (dailyRevenue[date] || 0) + parseInt(order.total_amount || 0);
+    });
+
+    return Object.entries(dailyRevenue).map(([date, revenue]) => ({
+      date,
+      revenue
+    }));
+  }, [getFilteredOrders]);
+
+  const maxRevenue = Math.max(...chartData.map(d => d.revenue), 1);
 
   const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = 'primary' }) => {
     const colorClasses = {
@@ -126,6 +179,58 @@ export default function AnalyticsDashboard({ onMessage }) {
 
   return (
     <div className="space-y-6">
+      {/* Filter Section */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-shopify-gray-400" />
+              <span className="text-sm font-medium text-shopify-gray-300">Filter Periode:</span>
+            </div>
+            
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { value: 'today', label: 'Hari Ini' },
+                { value: '7days', label: '7 Hari' },
+                { value: '30days', label: '30 Hari' },
+                { value: '90days', label: '90 Hari' },
+                { value: 'custom', label: 'Custom' }
+              ].map(filter => (
+                <button
+                  key={filter.value}
+                  onClick={() => setDateFilter(filter.value)}
+                  className={`px-4 py-2 rounded-shopify text-sm font-medium transition-all ${
+                    dateFilter === filter.value
+                      ? 'bg-shopify-accent-primary text-white'
+                      : 'bg-shopify-darker text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {dateFilter === 'custom' && (
+              <div className="flex gap-3 items-center">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="input-shopify text-sm"
+                />
+                <span className="text-shopify-gray-400">-</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="input-shopify text-sm"
+                />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -159,6 +264,41 @@ export default function AnalyticsDashboard({ onMessage }) {
           trendValue={`${profitPercentage}% margin`}
         />
       </div>
+
+      {/* Revenue Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue Trend</CardTitle>
+          <CardDescription>Daily revenue over selected period</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {chartData.length === 0 ? (
+              <p className="text-center py-12 text-shopify-gray-400">
+                Tidak ada data untuk periode ini
+              </p>
+            ) : (
+              chartData.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4">
+                  <div className="w-20 text-sm text-shopify-gray-400 font-medium">
+                    {item.date}
+                  </div>
+                  <div className="flex-1 h-10 bg-shopify-darker rounded-shopify overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-accent flex items-center justify-end pr-3 transition-all duration-500"
+                      style={{ width: `${(item.revenue / maxRevenue) * 100}%` }}
+                    >
+                      <span className="text-white text-sm font-semibold">
+                        {formatCurrency(item.revenue)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Secondary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -229,7 +369,7 @@ export default function AnalyticsDashboard({ onMessage }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {orders.slice(0, 5).map((order, idx) => (
+              {getFilteredOrders.slice(0, 5).map((order, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 bg-shopify-darker rounded-shopify">
                   <div>
                     <p className="font-medium text-white text-sm">{order.item_name}</p>
@@ -247,7 +387,7 @@ export default function AnalyticsDashboard({ onMessage }) {
                   </div>
                 </div>
               ))}
-              {orders.length === 0 && (
+              {getFilteredOrders.length === 0 && (
                 <p className="text-center py-8 text-shopify-gray-400">
                   Belum ada order
                 </p>

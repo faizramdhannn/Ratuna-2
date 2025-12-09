@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Package, ClipboardList, Boxes, Users, List, BarChart3, CheckCircle, XCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import OrderTab from '@/components/order/OrderTab';
 import OrderListTab from '@/components/order/OrderListTab';
 import MasterItemTab from '@/components/MasterItemTab';
@@ -32,7 +33,6 @@ export default function Dashboard() {
     }
   }, [currentUser]);
 
-  // Set default tab based on role
   useEffect(() => {
     if (currentUser) {
       if (currentUser.role === 'worker') {
@@ -126,10 +126,10 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-shopify-dark">
+    <>
       {/* Notification Toast */}
       {message.text && (
-        <div className="fixed top-4 right-4 z-50 animate-slide-down">
+        <div className="fixed top-20 right-4 z-50 animate-slide-down">
           <div className={`flex items-center gap-3 px-6 py-4 rounded-shopify-lg shadow-shopify-xl border ${
             message.type === 'success' 
               ? 'bg-shopify-accent-success border-green-600 text-white' 
@@ -145,33 +145,32 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        {/* Tabs Navigation */}
-        <div className="bg-shopify-charcoal border border-shopify-gray-800 rounded-shopify-lg p-2 mb-6 shadow-shopify">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => {
-              if (!canAccessTab(tab.id)) return null;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-shopify font-medium transition-all whitespace-nowrap ${
-                    activeTab === tab.id 
-                      ? 'bg-shopify-accent-primary text-white shadow-shopify' 
-                      : 'text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {/* Sidebar Navigation */}
+      <nav className="space-y-1">
+        {tabs.map((tab) => {
+          if (!canAccessTab(tab.id)) return null;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-shopify font-medium transition-all',
+                activeTab === tab.id 
+                  ? 'bg-shopify-accent-primary text-white shadow-shopify' 
+                  : 'text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800'
+              )}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-        {/* Tab Content */}
-        <div className="pb-8">
+      {/* Main Content Area - moved outside sidebar */}
+      <div className="fixed top-16 left-0 lg:left-64 right-0 bottom-0 overflow-y-auto bg-shopify-dark">
+        <div className="p-6">
           {activeTab === 'analytics' && (
             <AnalyticsDashboard onMessage={showMessage} />
           )}
@@ -221,6 +220,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
