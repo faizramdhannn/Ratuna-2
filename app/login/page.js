@@ -46,11 +46,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo & Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-21 h-21 rounded-shopify-lg mb-4 shadow-shopify-lg">
+          <div className="inline-flex items-center justify-center w-38 h-38 rounded-shopify-lg mb-4 shadow-shopify-lg">
             <img
               src="/Logo_Ratuna.png"
               alt="Ratuna Logo"
-              className="w-21 h-21 object-contain"
+              className="w-32 h-32 object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome</h1>

@@ -248,7 +248,7 @@ export default function RegisterPage() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-shopify-gray-500">
-            © 2024 Ratuna. All rights reserved.
+            © 2025 Ratuna. All rights reserved.
           </p>
         </div>
       </div>
