@@ -1,7 +1,8 @@
+// app/dashboard/page.js
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Package, ClipboardList, Boxes, Users, List, BarChart3, CheckCircle, XCircle } from 'lucide-react';
+import { ShoppingCart, Package, ClipboardList, Boxes, Users, List, BarChart3, CheckCircle, XCircle, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OrderTab from '@/components/order/OrderTab';
 import OrderListTab from '@/components/order/OrderListTab';
@@ -10,6 +11,7 @@ import ShoppingListTab from '@/components/ShoppingListTab';
 import StockTab from '@/components/StockTab';
 import UsersTab from '@/components/UsersTab';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import SettingsTab from '@/components/SettingsTab';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('analytics');
@@ -110,7 +112,7 @@ export default function Dashboard() {
   const canAccessTab = (tab) => {
     if (!currentUser) return false;
     if (currentUser.role === 'superadmin') return true;
-    if (currentUser.role === 'admin') return ['analytics', 'order', 'orderlist', 'master', 'shopping', 'stock'].includes(tab);
+    if (currentUser.role === 'admin') return ['analytics', 'order', 'orderlist', 'master', 'shopping', 'stock', 'settings'].includes(tab);
     if (currentUser.role === 'worker') return ['order', 'orderlist'].includes(tab);
     return false;
   };
@@ -123,29 +125,12 @@ export default function Dashboard() {
     { id: 'shopping', label: 'Shopping List', icon: ClipboardList, requiredRole: ['superadmin', 'admin'] },
     { id: 'stock', label: 'Stock', icon: Boxes, requiredRole: ['superadmin', 'admin'] },
     { id: 'users', label: 'Users', icon: Users, requiredRole: ['superadmin'] },
+    { id: 'settings', label: 'Settings', icon: Settings, requiredRole: ['superadmin', 'admin'] },
   ];
 
   return (
     <>
-      {/* Notification Toast */}
-      {message.text && (
-        <div className="fixed top-20 right-4 z-50 animate-slide-down">
-          <div className={`flex items-center gap-3 px-6 py-4 rounded-shopify-lg shadow-shopify-xl border ${
-            message.type === 'success' 
-              ? 'bg-shopify-accent-success border-green-600 text-white' 
-              : 'bg-shopify-accent-critical border-red-600 text-white'
-          }`}>
-            {message.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <XCircle className="w-5 h-5 flex-shrink-0" />
-            )}
-            <span className="font-medium">{message.text}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation - This will be rendered inside the sidebar in layout.js */}
       <nav className="space-y-1">
         {tabs.map((tab) => {
           if (!canAccessTab(tab.id)) return null;
@@ -168,8 +153,26 @@ export default function Dashboard() {
         })}
       </nav>
 
-      {/* Main Content Area - moved outside sidebar */}
+      {/* Main Content Area - This will be rendered in the main section */}
       <div className="fixed top-16 left-0 lg:left-64 right-0 bottom-0 overflow-y-auto bg-shopify-dark">
+        {/* Notification Toast */}
+        {message.text && (
+          <div className="fixed top-20 right-4 z-50 animate-slide-down">
+            <div className={`flex items-center gap-3 px-6 py-4 rounded-shopify-lg shadow-shopify-xl border ${
+              message.type === 'success' 
+                ? 'bg-shopify-accent-success border-green-600 text-white' 
+                : 'bg-shopify-accent-critical border-red-600 text-white'
+            }`}>
+              {message.type === 'success' ? (
+                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              ) : (
+                <XCircle className="w-5 h-5 flex-shrink-0" />
+              )}
+              <span className="font-medium">{message.text}</span>
+            </div>
+          </div>
+        )}
+
         <div className="p-6">
           {activeTab === 'analytics' && (
             <AnalyticsDashboard onMessage={showMessage} />
@@ -215,6 +218,13 @@ export default function Dashboard() {
             <UsersTab
               users={users}
               onRefresh={fetchUsers}
+              onMessage={showMessage}
+            />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsTab
+              currentUser={currentUser}
               onMessage={showMessage}
             />
           )}

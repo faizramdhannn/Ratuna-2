@@ -1,15 +1,9 @@
+// app/dashboard/layout.js
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  BarChart3, 
-  ShoppingCart, 
-  List, 
-  Package, 
-  ClipboardList, 
-  Boxes, 
-  Users,
   Menu,
   X,
   LogOut,
@@ -84,15 +78,15 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen bg-shopify-dark">
       {/* Top Navbar */}
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-shopify-charcoal border-b border-shopify-gray-800 z-40">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-shopify-charcoal border-b border-shopify-gray-800 z-50">
         <div className="h-full px-4 flex items-center justify-between">
           {/* Left: Menu Toggle & Logo */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800 rounded-shopify transition-colors lg:hidden"
+              className="p-2 text-shopify-gray-400 hover:text-white hover:bg-shopify-gray-800 rounded-shopify transition-colors"
             >
-              <Menu className="w-6 h-6" />
+              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
             
             <div className="flex items-center gap-3">
@@ -130,7 +124,7 @@ export default function DashboardLayout({ children }) {
         </div>
       </nav>
 
-      {/* Sidebar Backdrop */}
+      {/* Sidebar Backdrop for Mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
@@ -138,12 +132,25 @@ export default function DashboardLayout({ children }) {
         />
       )}
 
-      {/* Main Content - TANPA SIDEBAR DI SINI */}
-      <main className="pt-16">
-        <div className="min-h-screen">
-          {children}
-        </div>
-      </main>
+      {/* Main Container */}
+      <div className="pt-16 flex">
+        {/* Sidebar - Hidden by default on mobile, always visible on desktop */}
+        <aside
+          className={cn(
+            'fixed lg:sticky top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-shopify-charcoal border-r border-shopify-gray-800 z-40 transition-transform duration-300 overflow-y-auto',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          )}
+        >
+          <div className="p-4">
+            {children}
+          </div>
+        </aside>
+
+        {/* Main Content - Adjusts based on sidebar visibility */}
+        <main className="flex-1 min-h-[calc(100vh-4rem)] overflow-x-hidden">
+          {/* Content will be rendered here from dashboard/page.js */}
+        </main>
+      </div>
     </div>
   );
 }

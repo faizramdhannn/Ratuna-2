@@ -1,8 +1,40 @@
+// components/order/BillOrder.js
 'use client';
 
-import { forwardRef } from 'react';
+import { forwardRef, useState, useEffect } from 'react';
 
 const BillOrder = forwardRef(({ orderData, items }, ref) => {
+  const [settings, setSettings] = useState({
+    storeName: 'Ratuna',
+    storeAddress: 'Jl. Babakan Cichaeum No.73\nRT 02 RW 21 Cimenyan, Kb.Bandung',
+    storePhone: '088218639833',
+    billHeader: 'Ratuna',
+    billFooter: 'Terimakasih Telah Berbelanja',
+    logoUrl: '/Logo_Ratuna.png'
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSettings({
+          storeName: data.data.store_name || 'Ratuna',
+          storeAddress: data.data.store_address || 'Jl. Babakan Cichaeum No.73\nRT 02 RW 21 Cimenyan, Kb.Bandung',
+          storePhone: data.data.store_phone || '088218639833',
+          billHeader: data.data.bill_header || 'Ratuna',
+          billFooter: data.data.bill_footer || 'Terimakasih Telah Berbelanja',
+          logoUrl: data.data.logo_url || '/Logo_Ratuna.png'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -25,20 +57,26 @@ const BillOrder = forwardRef(({ orderData, items }, ref) => {
       {/* Logo */}
       <div className="bill-logo">
         <img 
-          src="/Logo_Ratuna.png" 
-          alt="Ratuna Logo" 
+          src={settings.logoUrl} 
+          alt={`${settings.storeName} Logo`}
           className="logo-img"
           style={{ display: 'block', margin: '0 auto' }}
+          onError={(e) => e.target.style.display = 'none'}
         />
       </div>
 
       {/* Store Info */}
       <div className="bill-header">
-        <h1 className="store-name">Ratuna</h1>
+        <h1 className="store-name">{settings.billHeader}</h1>
         <p className="store-address">
-          Jl. Babakan Cichaeum No.73<br />
-          RT 02 RW 21 Cimenyan, Kb.Bandung<br />
-          Telp: 088218639833
+          {settings.storeAddress.split('\n').map((line, i) => (
+            <span key={i}>
+              {line}
+              {i < settings.storeAddress.split('\n').length - 1 && <br />}
+            </span>
+          ))}
+          <br />
+          Telp: {settings.storePhone}
         </p>
       </div>
 
@@ -131,7 +169,7 @@ const BillOrder = forwardRef(({ orderData, items }, ref) => {
 
       {/* Footer */}
       <div className="bill-footer">
-        <p>Terimakasih Telah Berbelanja</p>
+        <p>{settings.billFooter}</p>
       </div>
 
       {/* CSS untuk Print */}
