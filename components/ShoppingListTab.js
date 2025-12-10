@@ -88,12 +88,14 @@ export default function ShoppingListTab({ onMessage }) {
     const variants = {
       'Karyawan': 'info',
       'Bahan': 'success',
-      'Operasional': 'warning'
+      'Operasional': 'warning',
+      'Marketing': 'info',
+      'Zakat': 'info'
     };
     return <Badge variant={variants[category] || 'default'}>{category}</Badge>;
   };
 
-  const categories = ['Karyawan', 'Bahan', 'Operasional'];
+  const categories = ['Karyawan', 'Bahan', 'Operasional', 'Marketing', 'Zakat'];
 
   const totalByCategory = useMemo(() => {
     return categories.reduce((acc, cat) => {
@@ -125,7 +127,7 @@ export default function ShoppingListTab({ onMessage }) {
         ))}
         
         <Card>
-          <CardContent className="p-5 bg-gradient-accent">
+          <CardContent className="p-5">
             <p className="text-sm text-white/80 mb-2">Total Keseluruhan</p>
             <p className="text-2xl font-bold text-white">
               {formatCurrency(grandTotal)}

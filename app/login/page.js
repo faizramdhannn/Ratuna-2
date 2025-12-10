@@ -46,14 +46,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo & Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-accent rounded-shopify-lg mb-4 shadow-shopify-lg">
+          <div className="inline-flex items-center justify-center w-21 h-21 rounded-shopify-lg mb-4 shadow-shopify-lg">
             <img
               src="/Logo_Ratuna.png"
               alt="Ratuna Logo"
-              className="w-16 h-16 object-contain"
+              className="w-21 h-21 object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome</h1>
           <p className="text-shopify-gray-400">Sign in to your Ratuna account</p>
         </div>
 
@@ -147,7 +147,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-shopify-gray-500">
-            © 2024 Ratuna. All rights reserved.
+            © 2025 Ratuna. All rights reserved.
           </p>
         </div>
       </div>

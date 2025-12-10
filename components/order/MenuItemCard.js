@@ -6,8 +6,8 @@ export default function MenuItemCard({ item, stockQty, onClick }) {
       onClick={() => !isOutOfStock && onClick(item)}
       className={`border-2 rounded-lg p-4 transition-all ${
         isOutOfStock 
-          ? 'border-gray-200 opacity-50 cursor-not-allowed' 
-          : 'border-gray-200 hover:border-black cursor-pointer hover:shadow-lg'
+          ? 'border-gray-800 opacity-50 cursor-not-allowed' 
+          : 'border-gray-800 hover:border-white cursor-pointer hover:shadow-lg'
       }`}
     >
       <h3 className="font-bold text-lg mb-1 line-clamp-2">{item.item_name}</h3>

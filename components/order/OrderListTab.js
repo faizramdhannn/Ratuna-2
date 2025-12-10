@@ -254,7 +254,7 @@ export default function OrderListTab({ onMessage }) {
             {filteredOrders.map((order, idx) => (
               <div
                 key={idx}
-                className="border-2 border-gray-200 rounded-lg p-4 hover:border-black transition-all"
+                className="border-2 border-gray-800 rounded-lg p-4 hover:border-gray-100 transition-all"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -270,19 +270,19 @@ export default function OrderListTab({ onMessage }) {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
-                      <div className="flex items-center space-x-2 text-gray-600">
+                      <div className="flex items-center space-x-2 text-white">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(order.created_at)}</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-gray-600">
+                      <div className="flex items-center space-x-2 text-white">
                         <User className="w-4 h-4" />
                         <span>Kasir: {order.cashier_name}</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-gray-600">
+                      <div className="flex items-center space-x-2 text-white">
                         <User className="w-4 h-4" />
                         <span>Customer: {order.customer_name}</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-gray-600">
+                      <div className="flex items-center space-x-2 text-white">
                         <Package className="w-4 h-4" />
                         <span>{order.total_items} item(s)</span>
                       </div>
@@ -297,14 +297,14 @@ export default function OrderListTab({ onMessage }) {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs text-gray-500">Total Pembayaran</p>
+                        <p className="text-xs text-white">Total Pembayaran</p>
                         <p className="text-xl font-bold">
                           Rp {order.total_amount.toLocaleString()}
                         </p>
                       </div>
                       <button
                         onClick={() => fetchOrderDetail(order.order_id)}
-                        className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
+                        className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-200 rounded-lg transition-all"
                       >
                         <Eye className="w-4 h-4" />
                         <span>Detail</span>
