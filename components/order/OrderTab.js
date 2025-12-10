@@ -317,7 +317,7 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
     <>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8">
-          <div className="bg-white border-2 border-black rounded-lg p-6">
+          <div className="bg-shopify-charcoal border-2 border-gray-800 rounded-lg p-6">
             <div className="mb-6">
               <h2 className="text-2xl font-bold mb-4">Menu</h2>
               <SearchBar
@@ -360,7 +360,7 @@ export default function OrderTab({ masterItems, stocks, categories, currentUser,
         </div>
 
         <div className="lg:col-span-4">
-          <div className="bg-white border-2 border-black rounded-lg p-6 sticky top-4">
+          <div className="bg-shopify-charcoal border-2 border-black rounded-lg p-6 sticky top-4">
             <div className="flex items-center space-x-2 mb-4">
               <ShoppingCart className="w-6 h-6" />
               <h2 className="text-2xl font-bold">Keranjang</h2>

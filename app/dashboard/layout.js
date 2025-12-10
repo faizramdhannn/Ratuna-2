@@ -138,22 +138,10 @@ export default function DashboardLayout({ children }) {
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed top-16 left-0 bottom-0 w-64 bg-shopify-charcoal border-r border-shopify-gray-800 z-30 transition-transform duration-300',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        )}
-      >
-        <div className="h-full overflow-y-auto p-4 scrollbar-shopify">
+      {/* Main Content - TANPA SIDEBAR DI SINI */}
+      <main className="pt-16">
+        <div className="min-h-screen">
           {children}
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="pt-16 lg:pl-64">
-        <div className="p-6">
-          {/* Content akan diisi oleh page.js */}
         </div>
       </main>
     </div>

@@ -221,7 +221,7 @@ export default function OrderListTab({ onMessage }) {
 
   return (
     <>
-      <div className="bg-white border-2 border-black rounded-lg p-8">
+      <div className="bg-shopify-charcoal border-2 border-black rounded-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Daftar Order</h2>
           <button
